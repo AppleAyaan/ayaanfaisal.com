@@ -12,13 +12,15 @@ import { createPortal } from 'react-dom';
 
 const STICKER_W = 160;
 const STICKER_H = 112;
-const GAP = 24;
-const SPACING = STICKER_W + GAP;
+const MIN_GAP = 12;
+const BASE_SPACING = STICKER_W + MIN_GAP;
 
 interface Sticker {
   id: number;
   label: string;
-  color: string;
+  description: string;
+  src: string;
+  alt: string;
   rotation: number;
 }
 
@@ -28,30 +30,83 @@ interface DetachedSticker extends Sticker {
 }
 
 const STICKER_DATA: Omit<Sticker, 'rotation'>[] = [
-  { id: 0, label: 'Design', color: '#fef3c7' },
-  { id: 1, label: 'Code', color: '#fce7f3' },
-  { id: 2, label: 'Music', color: '#dbeafe' },
-  { id: 3, label: 'Art', color: '#d1fae5' },
-  { id: 4, label: 'Travel', color: '#fed7aa' },
-  { id: 5, label: 'Coffee', color: '#fef9c3' },
-  { id: 6, label: 'Books', color: '#e0e7ff' },
-  { id: 7, label: 'Photo', color: '#fbcfe8' },
-  { id: 8, label: 'Film', color: '#fde68a' },
-  { id: 9, label: 'Ideas', color: '#bfdbfe' },
-  { id: 10, label: 'Make', color: '#fecaca' },
-  { id: 11, label: 'Build', color: '#bbf7d0' },
+  {
+    id: 0,
+    label: 'airpods',
+    description: 'my personal music players 🎧',
+    src: '/stickers/airpods.png',
+    alt: 'AirPods sticker',
+  },
+  {
+    id: 1,
+    label: 'drake',
+    description: 'my 🐐 artist',
+    src: '/stickers/drake.png',
+    alt: 'Drake sticker',
+  },
+  {
+    id: 2,
+    label: 'mycar',
+    description: 'my personal car 🚗',
+    src: '/stickers/mycar.png',
+    alt: 'My car sticker',
+  },
+  {
+    id: 3,
+    label: 'mymac',
+    description: 'my coding machine 💻',
+    src: '/stickers/mymac.png',
+    alt: 'My Mac sticker',
+  },
+  {
+    id: 4,
+    label: 'cursor',
+    description: 'my partner in crime 🤝',
+    src: '/stickers/cursor.png',
+    alt: 'Cursor sticker',
+  },
+  {
+    id: 5,
+    label: 'ovo',
+    description: 'my keychain 🔑',
+    src: '/stickers/ovo.png',
+    alt: 'OVO sticker',
+  },
+  {
+    id: 6,
+    label: 'pocket3',
+    description: 'dream camera! 📸',
+    src: '/stickers/pocket3.png',
+    alt: 'Pocket 3 sticker',
+  },
+  {
+    id: 7,
+    label: 'pakistan',
+    description: 'ethnicity',
+    src: '/stickers/pakistan.png',
+    alt: 'Pakistan sticker',
+  },
+  {
+    id: 8,
+    label: 'uae',
+    description: 'where I grew up 🇦🇪',
+    src: '/stickers/uae.svg',
+    alt: 'UAE sticker',
+  },
 ];
 
 const STICKERS: Sticker[] = STICKER_DATA.map((s, idx) => ({
   ...s,
   rotation: ((idx * 7) % 11) - 5,
 }));
+const INITIAL_STICKER_ORDER = [0, 1, 2, 3, 4, 8, 5, 6, 7];
 
-const stickerById = (id: number) => STICKERS.find((s) => s.id === id)!;
+const STICKER_BY_ID = new Map(STICKERS.map((s) => [s.id, s] as const));
+const stickerById = (id: number) => STICKER_BY_ID.get(id);
 
 export default function StickerCarousel() {
   const [stickerOrder, setStickerOrder] = useState<number[]>(
-    STICKERS.map((s) => s.id)
+    INITIAL_STICKER_ORDER
   );
   const [detachedStickers, setDetachedStickers] = useState<DetachedSticker[]>(
     []
@@ -66,10 +121,27 @@ export default function StickerCarousel() {
     setMounted(true);
   }, []);
 
+  // Fast Refresh can preserve state from an older sticker dataset.
+  // Drop stale IDs so runtime rendering never sees undefined stickers.
+  useEffect(() => {
+    const validIds = new Set(STICKERS.map((s) => s.id));
+    setStickerOrder((prev) => prev.filter((id) => validIds.has(id)));
+    setDetachedStickers((prev) =>
+      prev
+        .filter((s) => validIds.has(s.id))
+        .map((s) => {
+          const fresh = stickerById(s.id);
+          return fresh ? { ...fresh, x: s.x, y: s.y } : s;
+        })
+    );
+  }, []);
+
   const carouselRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const x = useMotionValue(0);
   const trackWidthRef = useRef(0);
+  const [spacing, setSpacing] = useState(BASE_SPACING);
+  const hasInitializedStartPosRef = useRef(false);
 
   // Motion values that drive the actively-dragged sticker's position.
   // Updating these does NOT trigger a React re-render — framer-motion
@@ -95,18 +167,52 @@ export default function StickerCarousel() {
 
   // Stable references so memoized children don't re-render unnecessarily
   const carouselStickers = useMemo(
-    () => stickerOrder.map(stickerById),
+    () =>
+      stickerOrder
+        .map(stickerById)
+        .filter((sticker): sticker is Sticker => Boolean(sticker)),
     [stickerOrder]
   );
-  const duplicatedStickers = useMemo(
-    () => [...carouselStickers, ...carouselStickers],
+  const conveyorStickers = useMemo(
+    () =>
+      carouselStickers.length > 1
+        ? [...carouselStickers, ...carouselStickers]
+        : carouselStickers,
     [carouselStickers]
   );
   const isDragging = activeDragId !== null;
 
   useEffect(() => {
-    trackWidthRef.current = stickerOrder.length * SPACING;
-  }, [stickerOrder.length]);
+    const measureAndSetSpacing = () => {
+      const carouselWidth = carouselRef.current?.getBoundingClientRect().width ?? 0;
+      if (carouselStickers.length <= 1 || carouselWidth <= 0) {
+        setSpacing(BASE_SPACING);
+        return;
+      }
+      // Keep stickers tightly packed instead of stretching across the belt.
+      setSpacing(BASE_SPACING);
+    };
+
+    measureAndSetSpacing();
+    window.addEventListener('resize', measureAndSetSpacing);
+    return () => window.removeEventListener('resize', measureAndSetSpacing);
+  }, [carouselStickers.length]);
+
+  useEffect(() => {
+    trackWidthRef.current = stickerOrder.length * spacing;
+  }, [stickerOrder.length, spacing]);
+
+  useEffect(() => {
+    if (hasInitializedStartPosRef.current) return;
+    if (carouselStickers.length === 0) return;
+    const carouselWidth = carouselRef.current?.getBoundingClientRect().width ?? 0;
+    if (carouselWidth <= 0) return;
+
+    const visibleTrackWidth = carouselStickers.length * spacing;
+    const centeredStartX = (carouselWidth - visibleTrackWidth) / 2;
+    x.set(centeredStartX);
+    hasInitializedStartPosRef.current = true;
+  }, [carouselStickers.length, spacing, x]);
 
   // Pause when hovering OR dragging
   useAnimationFrame((_, delta) => {
@@ -115,6 +221,16 @@ export default function StickerCarousel() {
     const speed = 50;
     const moveBy = (speed * delta) / 1000;
     let next = x.get() - moveBy;
+    if (carouselStickers.length === 1) {
+      const carouselWidth = carouselRef.current?.getBoundingClientRect().width ?? 0;
+      if (next <= -spacing) {
+        next = carouselWidth;
+      }
+      x.set(next);
+      return;
+    }
+
+    // Seamless loop: no state reordering during motion, so no hitch/pause.
     if (trackWidthRef.current > 0 && next <= -trackWidthRef.current) {
       next += trackWidthRef.current;
     }
@@ -172,7 +288,7 @@ export default function StickerCarousel() {
               trackWidthRef.current;
             nextIdx = Math.max(
               0,
-              Math.min(trackLen, Math.round(localPos / SPACING))
+              Math.min(trackLen, Math.round(localPos / spacing))
             );
           } else {
             nextIdx = 0;
@@ -312,7 +428,7 @@ export default function StickerCarousel() {
 
   const handleCleanup = () => {
     setDetachedStickers([]);
-    setStickerOrder(STICKERS.map((s) => s.id));
+    setStickerOrder(INITIAL_STICKER_ORDER);
   };
 
   const showInsertionPreview =
@@ -341,11 +457,11 @@ export default function StickerCarousel() {
         ) : (
           <motion.div
             ref={trackRef}
-            className="flex gap-6 will-change-transform"
-            style={{ x }}
+            className="flex will-change-transform"
+            style={{ x, gap: `${Math.max(0, spacing - STICKER_W)}px` }}
           >
             <LayoutGroup>
-              {duplicatedStickers.map((sticker, idx) => {
+              {conveyorStickers.map((sticker, idx) => {
                 const localIndex = idx % Math.max(carouselStickers.length, 1);
                 const showSpacerHere =
                   showInsertionPreview && localIndex === insertionIndex;
@@ -434,7 +550,6 @@ export default function StickerCarousel() {
                   style={{
                     position: 'absolute',
                     ...positionStyle,
-                    backgroundColor: sticker.color,
                     rotate: sticker.rotation,
                     width: STICKER_W,
                     height: STICKER_H,
@@ -443,9 +558,18 @@ export default function StickerCarousel() {
                     touchAction: 'none',
                     willChange: isActive ? 'transform' : undefined,
                   }}
-                  className="rounded-xl border-4 border-white shadow-2xl flex items-center justify-center text-foreground font-bold text-lg select-none"
+                  className="select-none"
                 >
-                  {sticker.label}
+                  <img
+                    src={sticker.src}
+                    alt={sticker.alt}
+                    draggable={false}
+                    className="h-full w-full object-contain pointer-events-none"
+                    style={{
+                      filter:
+                        'drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(0 10px 14px rgba(0,0,0,0.35))',
+                    }}
+                  />
                 </motion.div>
               );
             })}
@@ -472,15 +596,26 @@ const CarouselSticker = memo(function CarouselSticker({
     <div
       onPointerDown={(e) => onPickup(sticker, e)}
       style={{
-        backgroundColor: sticker.color,
         transform: `rotate(${sticker.rotation}deg)`,
         width: STICKER_W,
         height: STICKER_H,
         touchAction: 'none',
       }}
-      className="flex-shrink-0 rounded-xl border-4 border-white shadow-lg flex items-center justify-center text-foreground font-bold text-lg cursor-grab active:cursor-grabbing select-none transition-transform hover:scale-105"
+      className="group relative flex-shrink-0 cursor-grab active:cursor-grabbing select-none transition-transform hover:scale-105"
     >
-      {sticker.label}
+      <img
+        src={sticker.src}
+        alt={sticker.alt}
+        draggable={false}
+        className="h-full w-full object-contain pointer-events-none"
+        style={{
+          filter:
+            'drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(0 8px 12px rgba(0,0,0,0.3))',
+        }}
+      />
+      <p className="pointer-events-none absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap text-[11px] text-muted-foreground/70 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+        {sticker.description}
+      </p>
     </div>
   );
 });

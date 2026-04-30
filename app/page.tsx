@@ -8,7 +8,15 @@ import { usePathname } from 'next/navigation';
 import StickerCarousel from '@/components/sticker-carousel';
 import HoverName from '@/components/hover-name';
 
-function HandDrawnUnderline({ children, delay = 0 }: { children: ReactNode; delay?: number }) {
+function HandDrawnUnderline({
+  children,
+  delay = 0,
+  triggerOnView = false,
+}: {
+  children: ReactNode;
+  delay?: number;
+  triggerOnView?: boolean;
+}) {
   return (
     <span className="relative inline-block align-baseline">
       <span className="relative z-10">{children}</span>
@@ -26,11 +34,67 @@ function HandDrawnUnderline({ children, delay = 0 }: { children: ReactNode; dela
           strokeLinecap="round"
           strokeLinejoin="round"
           initial={{ pathLength: 0, opacity: 0 }}
-          animate={{ pathLength: 1, opacity: 1 }}
+          animate={triggerOnView ? undefined : { pathLength: 1, opacity: 1 }}
+          whileInView={triggerOnView ? { pathLength: 1, opacity: 1 } : undefined}
+          viewport={triggerOnView ? { once: true, amount: 0.65 } : undefined}
           transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], delay }}
         />
       </motion.svg>
     </span>
+  );
+}
+
+function FlipbookTitle({
+  text,
+  delay = 0,
+}: {
+  text: string;
+  delay?: number;
+}) {
+  const [displayText, setDisplayText] = useState(' '.repeat(text.length));
+  const [hasStarted, setHasStarted] = useState(false);
+  const [isDone, setIsDone] = useState(false);
+
+  useEffect(() => {
+    if (!hasStarted || isDone) return;
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let revealIndex = 0;
+
+    const startTimer = window.setTimeout(() => {
+      const interval = window.setInterval(() => {
+        revealIndex += 1;
+        const next = text
+          .split('')
+          .map((char, idx) => {
+            if (char === ' ') return ' ';
+            if (idx < revealIndex) return char;
+            return alphabet[Math.floor(Math.random() * alphabet.length)];
+          })
+          .join('');
+
+        setDisplayText(next);
+
+        if (revealIndex >= text.length) {
+          window.clearInterval(interval);
+          setDisplayText(text);
+          setIsDone(true);
+        }
+      }, 85);
+    }, Math.max(0, delay) * 1000);
+
+    return () => {
+      window.clearTimeout(startTimer);
+    };
+  }, [delay, hasStarted, isDone, text]);
+
+  return (
+    <motion.span
+      className="inline-block"
+      onViewportEnter={() => setHasStarted(true)}
+      viewport={{ once: true, amount: 0.65 }}
+    >
+      {isDone ? text : displayText}
+    </motion.span>
   );
 }
 
@@ -373,14 +437,16 @@ export default function Home() {
   // --------------------------------
   const projects = [
     {
-      title: 'AyaanFaisal.com',
+      title: 'ayaanfaisal.com',
       date: "apr '26",
       description:
         <>
-          my personal website where I share what I am building, projects, and updates across school, startups, and creative work.
+          an interactive and fun portfolio built with Next.js and <HandDrawnUnderline delay={0.7}>Tailwind CSS</HandDrawnUnderline>. check out my projects and updates!
+     
         </>,
       url: { href: '/', target: '_self', rel: 'noreferrer' },
-      gifSrc: '/images/logo.png',
+      gifSrc: '/tag-gifs/ayaanfaisal.com.webm',
+      mediaType: 'video',
       gifAlt: 'Ayaan Faisal personal website preview',
     },
     {
@@ -631,7 +697,7 @@ export default function Home() {
                 projects
               </Link>
               <Link
-                href="/ayaan-visuals"
+                href="https://www.instagram.com/ayaan.visuals/"
                 className={`font-light text-right transition-colors ${pathname === '/ayaan-visuals' ? 'text-foreground font-semibold scale-[1.03]' : 'text-muted-foreground/50 hover:text-muted-foreground'
                   }`}
               >
@@ -781,7 +847,7 @@ export default function Home() {
               variants={pageReveal}
               transition={{ duration: 0.5, ease: 'easeOut', delay: 0.18 }}
             >
-              <p className="text-base lg:text-lg text-foreground mb-6 font-medium tracking-tight">
+              <div className="text-base lg:text-lg text-foreground mb-6 font-medium tracking-tight">
                 <span className="text-base lg:text-lg font-semibold">2A Math @ </span>
                 <span className="relative inline-block">
                   {(() => {
@@ -864,7 +930,7 @@ export default function Home() {
                   </em>
                 </p>
            
-              </p>
+              </div>
 
               {/* Experience List */}
               <motion.div
@@ -906,7 +972,7 @@ export default function Home() {
                 >
                   {projects.map((project, idx) => (
                     (() => {
-                      const titleUnderlineDelay = 3.36 + idx * 0.22;
+                      const titleUnderlineDelay = idx * 0.22;
                       return (
                     <motion.div
                       key={idx}
@@ -948,9 +1014,7 @@ export default function Home() {
                             className="text-xl font-semibold text-foreground leading-tight hover:opacity-80 transition-opacity cursor-pointer"
                             variants={pageReveal}
                           >
-                            <HandDrawnUnderline delay={titleUnderlineDelay}>
-                              {project.title}
-                            </HandDrawnUnderline>
+                            <FlipbookTitle text={project.title} delay={titleUnderlineDelay} />
                           </motion.a>
                           <motion.span
                             className="text-2xl font-semibold text-muted-foreground/80 leading-none"
