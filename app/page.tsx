@@ -58,14 +58,14 @@ const pageReveal = {
 };
 
 const musicTracks = [
-  { file: 'NOKIA - drake.mp3', title: 'NOKIA', artist: 'Drake', artFile: 'nokia.webp' },
+  { file: 'NOKIA - drake.mp3', title: 'NOKIA', artist: 'Drake', artFile: 'nokia.webp', explicit: true },
   {
     file: 'billie jean - michael jackson.mp3',
     title: 'Billie Jean',
     artist: 'Michael Jackson',
     artFile: 'billie jean.jpg',
   },
-  { file: 'tried our best - drake.mp3', title: 'Tried Our Best', artist: 'Drake', artFile: 'tried our best.jpeg' },
+  { file: 'tried our best - drake.mp3', title: 'Tried Our Best', artist: 'Drake', artFile: 'tried our best.jpeg', explicit: true },
   { file: 'what did i miss - drake.mp3', title: 'What Did I Miss', artist: 'Drake', artFile: 'what did i miss.png' },
 ].map((track) => ({
   ...track,
@@ -247,7 +247,7 @@ export default function Home() {
   ];
 
   const tagLinks: Record<string, string> = {
-    'TBD': 'https://example.com/tbd',
+    'TBD': 'https://ayaanfaisal.com',
     '@Halo Halo': 'https://halohaloapp.com',
     'WATSMyGPA': 'https://watsmygpa.me',
     'Velocity': 'https://www.velocityincubator.com/',
@@ -368,11 +368,45 @@ export default function Home() {
     },
   ];
 
+  // --------------------------------
+  // projects are sorted by date
+  // --------------------------------
   const projects = [
-    { title: 'Project One', url: '#' },
-    { title: 'Project Two', url: '#' },
-    { title: 'Project Three', url: '#' },
-    { title: 'Project Four', url: '#' },
+    {
+      title: 'AyaanFaisal.com',
+      date: "apr '26",
+      description:
+        <>
+          my personal website where I share what I am building, projects, and updates across school, startups, and creative work.
+        </>,
+      url: { href: '/', target: '_self', rel: 'noreferrer' },
+      gifSrc: '/images/logo.png',
+      gifAlt: 'Ayaan Faisal personal website preview',
+    },
+    {
+      title: 'WatsMyGPA',
+      date: "jan '26",
+      description:
+        <>
+          An <HandDrawnUnderline>ML-powered</HandDrawnUnderline> platform that predicts GPA trends and provides anonymized academic performance insights across UW programs.
+        </>,
+      url: { href: 'https://watsmygpa.me', target: '_blank', rel: 'noreferrer' },
+      gifSrc: '/tag-gifs/watsmygpa.gif',
+      gifAlt: 'WatsMyGPA project preview',
+    },
+    {
+      title: 'PackRight',
+      date: "oct '25",
+      description:
+        <>
+          an iOS packing assistant app designed to help users{' '}
+          <HandDrawnUnderline>reduce trip-prep time by 40%</HandDrawnUnderline>. PackRight is built with SwiftUI and XCode.
+        </>,
+      url: { href: 'https://github.com/AppleAyaan/PackRight', target: '_blank', rel: 'noreferrer' },
+      gifSrc: '/tag-gifs/packright.webm',
+      mediaType: 'video',
+      gifAlt: 'PackRight project preview',
+    },
   ];
 
   const renderItem = (item: any, itemIndex: number, expIndex: number) => {
@@ -465,7 +499,14 @@ export default function Home() {
                   }
                 }
               `}</style>
-              {item.text === 'WATSMyGPA' ? (
+              {item.text === 'TBD' ? (
+                <img
+                  key={gifVersion}
+                  src={`/tag-gifs/tbd.gif?v=${gifVersion}`}
+                  alt="tbd popup gif"
+                  className="w-full h-full object-cover object-[center_70%] block"
+                />
+              ) : item.text === 'WATSMyGPA' ? (
                 <img
                   key={gifVersion}
                   src={`/tag-gifs/watsmygpa.gif?v=${gifVersion}`}
@@ -480,10 +521,34 @@ export default function Home() {
                   className="w-full h-full object-cover block"
                 />
               ) : item.text === '@Halo Halo' ? (
+                <video
+                  key={gifVersion}
+                  src={`/tag-gifs/halohalo.webm?v=${gifVersion}`}
+                  className="w-full h-full object-cover block"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                />
+              ) : item.text === '@ayaan.visuals' ? (
                 <img
                   key={gifVersion}
-                  src="/tag-gifs/halohaloapp.png"
-                  alt="halo halo popup gif"
+                  src={`/tag-gifs/ayaan.visuals.gif?v=${gifVersion}`}
+                  alt="ayaan visuals popup gif"
+                  className="w-full h-full object-cover block"
+                />
+              ) : item.text === 'X' ? (
+                <img
+                  key={gifVersion}
+                  src={`/tag-gifs/X.gif?v=${gifVersion}`}
+                  alt="x popup gif"
+                  className="w-full h-full object-cover block"
+                />
+              ) : typeof item.text === 'string' && item.text.replace(/[.,!?]+$/, '') === 'LinkedIn' ? (
+                <img
+                  key={gifVersion}
+                  src={`/tag-gifs/linkedin.gif?v=${gifVersion}`}
+                  alt="linkedin popup gif"
                   className="w-full h-full object-cover block"
                 />
               ) : item.text === '@University' ? (
@@ -492,6 +557,16 @@ export default function Home() {
                   src="/tag-gifs/uwaterloo.png"
                   alt="uwaterloo popup gif"
                   className="w-full h-full object-cover block"
+                />
+              ) : item.text === 'Claude Code' ? (
+                <video
+                  key={gifVersion}
+                  src={`/tag-gifs/claude.webm?v=${gifVersion}`}
+                  className="w-full h-full object-cover block"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-r from-gray-600 to-gray-800 flex items-center justify-center text-white text-xs font-semibold">
@@ -569,7 +644,7 @@ export default function Home() {
           <div className="space-y-4">
             <div className="flex items-center justify-center gap-3">
               <button
-                className="p-1 text-black hover:text-black/80 transition-colors"
+                className="p-1 text-black hover:text-black/80 transition-colors cursor-pointer"
                 aria-label="Previous track"
                 onClick={previousTrack}
               >
@@ -579,7 +654,7 @@ export default function Home() {
               <button
                 type="button"
                 onClick={togglePlay}
-                className="w-20 h-20 rounded-full bg-secondary shadow-md flex items-center justify-center hover:bg-muted transition-colors"
+                className="w-20 h-20 rounded-full bg-secondary shadow-md flex items-center justify-center hover:bg-muted transition-colors cursor-pointer"
                 aria-label={isPlaying ? 'Pause track' : 'Play track'}
               >
                 <motion.div
@@ -611,7 +686,7 @@ export default function Home() {
               </button>
 
               <button
-                className="p-1 text-black hover:text-black/80 transition-colors"
+                className="p-1 text-black hover:text-black/80 transition-colors cursor-pointer"
                 aria-label="Next track"
                 onClick={nextTrack}
               >
@@ -620,9 +695,18 @@ export default function Home() {
             </div>
 
             <div className="text-center space-y-0.5">
-              <p className="text-xs font-medium text-foreground">
+              <p className="text-xs font-medium text-foreground inline-flex items-center gap-1">
                 <span className="mr-1">♪</span>
                 {currentTrack.title}
+                {currentTrack.explicit ? (
+                  <span
+                    className="inline-flex h-4 min-w-4 items-center justify-center rounded bg-black/80 px-1 text-[9px] font-semibold leading-none text-white"
+                    aria-label="Explicit"
+                    title="Explicit"
+                  >
+                    E
+                  </span>
+                ) : null}
               </p>
               <p className="text-[10px] text-black">{currentTrack.artist}</p>
             </div>
@@ -764,7 +848,7 @@ export default function Home() {
                             `}</style>
                             <img
                               key={gifVersion}
-                              src={`/tag-gifs/uwaterloo.png?v=${gifVersion}`}
+                              src="/tag-gifs/uwaterloo.gif"
                               alt="uwaterloo popup gif"
                               className="w-full h-full object-cover block"
                             />
@@ -813,21 +897,77 @@ export default function Home() {
                 transition={{ duration: 0.5, ease: 'easeOut', delay: 0.52 }}
               >
                 <h3 className="text-lg font-semibold text-foreground mb-6">projects 🚧</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <motion.div
+                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                  variants={pageReveal}
+                  initial="hidden"
+                  animate="visible"
+                  transition={{ duration: 0.5, ease: 'easeOut', delay: 0.58, staggerChildren: 0.12 }}
+                >
                   {projects.map((project, idx) => (
-                    <a
+                    (() => {
+                      const titleUnderlineDelay = 3.36 + idx * 0.22;
+                      return (
+                    <motion.div
                       key={idx}
-                      href={project.url}
-                      className="group block"
+                      className="space-y-2.5"
+                      variants={pageReveal}
+                      transition={{ duration: 0.45, ease: 'easeOut', staggerChildren: 0.08 }}
                     >
-                      <div className="h-40 bg-secondary rounded-lg border border-border/50 transition-all duration-300 hover:border-primary hover:shadow-md hover:scale-105 cursor-pointer flex items-center justify-center p-4">
-                        <span className="text-foreground font-medium text-center group-hover:text-primary transition-colors">
-                          {project.title}
-                        </span>
+                      <a
+                        href={project.url.href}
+                        target={project.url.target}
+                        rel={project.url.rel}
+                        className="group block cursor-pointer"
+                      >
+                        <div className="aspect-video overflow-hidden rounded-lg border border-border/50 bg-secondary/40">
+                          {project.mediaType === 'video' ? (
+                            <video
+                              src={project.gifSrc}
+                              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                            />
+                          ) : (
+                            <img
+                              src={project.gifSrc}
+                              alt={project.gifAlt}
+                              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                            />
+                          )}
+                        </div>
+                      </a>
+                      <div className="space-y-0.5">
+                        <div className="flex items-baseline justify-between gap-4">
+                          <motion.a
+                            href={project.url.href}
+                            target={project.url.target}
+                            rel={project.url.rel}
+                            className="text-xl font-semibold text-foreground leading-tight hover:opacity-80 transition-opacity cursor-pointer"
+                            variants={pageReveal}
+                          >
+                            <HandDrawnUnderline delay={titleUnderlineDelay}>
+                              {project.title}
+                            </HandDrawnUnderline>
+                          </motion.a>
+                          <motion.span
+                            className="text-2xl font-semibold text-muted-foreground/80 leading-none"
+                            variants={pageReveal}
+                          >
+                            {project.date}
+                          </motion.span>
+                        </div>
+                        <p className="text-base text-muted-foreground leading-relaxed">
+                          {project.description}
+                        </p>
                       </div>
-                    </a>
+                    </motion.div>
+                      );
+                    })()
                   ))}
-                </div>
+                </motion.div>
               </motion.div>
 
             </motion.div>
