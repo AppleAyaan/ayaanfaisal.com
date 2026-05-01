@@ -449,7 +449,7 @@ export default function StickerCarousel() {
           <div className="flex items-center justify-center h-32">
             <button
               onClick={handleCleanup}
-              className="px-6 py-3 bg-primary text-white rounded-full font-semibold shadow-md hover:scale-105 transition-transform"
+              className="px-6 py-3 rounded-full font-semibold shadow-md bg-sky-200 text-sky-900 hover:bg-sky-300 hover:scale-105 transition-transform transition-colors"
             >
               clean up
             </button>

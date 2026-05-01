@@ -441,7 +441,8 @@ export default function Home() {
       date: "apr '26",
       description:
         <>
-          an interactive and fun portfolio built with Next.js and <HandDrawnUnderline delay={0.7}>Tailwind CSS</HandDrawnUnderline>. check out my projects and updates!
+          an <HandDrawnUnderline delay={0} triggerOnView>interactive and fun portfolio</HandDrawnUnderline> built with Next.js and <HandDrawnUnderline delay={0.45} triggerOnView>Tailwind CSS</HandDrawnUnderline>. check out my projects and updates!
+     
      
         </>,
       url: { href: '/', target: '_self', rel: 'noreferrer' },
@@ -454,7 +455,8 @@ export default function Home() {
       date: "jan '26",
       description:
         <>
-          An <HandDrawnUnderline>ML-powered</HandDrawnUnderline> platform that predicts GPA trends and provides anonymized academic performance insights across UW programs.
+          An <HandDrawnUnderline delay={0.9} triggerOnView>ML-powered</HandDrawnUnderline> platform that predicts GPA trends and provides <HandDrawnUnderline delay={1.2} triggerOnView>anonymized academic</HandDrawnUnderline> performance insights across UW programs.
+     
         </>,
       url: { href: 'https://watsmygpa.me', target: '_blank', rel: 'noreferrer' },
       gifSrc: '/tag-gifs/watsmygpa.gif',
@@ -465,8 +467,7 @@ export default function Home() {
       date: "oct '25",
       description:
         <>
-          an iOS packing assistant app designed to help users{' '}
-          <HandDrawnUnderline>reduce trip-prep time by 40%</HandDrawnUnderline>. PackRight is built with SwiftUI and XCode.
+          an <HandDrawnUnderline delay={1.05} triggerOnView>iOS packing assistant app</HandDrawnUnderline> designed to help users <HandDrawnUnderline delay={1.35} triggerOnView>reduce trip-prep time by 40%</HandDrawnUnderline>. PackRight is built with SwiftUI and XCode.
         </>,
       url: { href: 'https://github.com/AppleAyaan/PackRight', target: '_blank', rel: 'noreferrer' },
       gifSrc: '/tag-gifs/packright.webm',
@@ -926,7 +927,21 @@ export default function Home() {
                 </span>
                 <p className="text-sm lg:text-base text-muted-foreground mb-8 leading-relaxed">
                   <em>
-                    "<HandDrawnUnderline delay={1.95}>you can just build things</HandDrawnUnderline>..."
+                    "
+                    <HandDrawnUnderline delay={1.95}>
+                      <motion.span
+                        className="inline-block bg-clip-text text-transparent"
+                        style={{
+                          backgroundImage: 'linear-gradient(110deg, #b18734 0%, #d8b56b 45%, #e8cf94 60%, #b18734 100%)',
+                          backgroundSize: '220% 100%',
+                        }}
+                        animate={{ backgroundPosition: ['0% 50%', '100% 50%'] }}
+                        transition={{ duration: 3.2, repeat: Infinity, ease: 'linear' }}
+                      >
+                        you can just build things
+                      </motion.span>
+                    </HandDrawnUnderline>
+                    ..."
                   </em>
                 </p>
            
@@ -1017,7 +1032,7 @@ export default function Home() {
                             <FlipbookTitle text={project.title} delay={titleUnderlineDelay} />
                           </motion.a>
                           <motion.span
-                            className="text-2xl font-semibold text-muted-foreground/80 leading-none"
+                            className="text-2xl font-semibold text-slate-500 leading-none"
                             variants={pageReveal}
                           >
                             {project.date}
