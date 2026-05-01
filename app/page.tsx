@@ -254,6 +254,50 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const desktopMedia = window.matchMedia('(min-width: 1024px)');
+    let rafId: number | null = null;
+
+    const updateSidebarMode = () => {
+      rafId = null;
+
+      if (!desktopMedia.matches) {
+        setIsDesktopSidebarReleased(false);
+        return;
+      }
+
+      const mainContent = mainContentRef.current;
+      if (!mainContent) return;
+
+      const { bottom } = mainContent.getBoundingClientRect();
+      const shouldRelease = bottom <= window.innerHeight;
+      setIsDesktopSidebarReleased((prev) =>
+        prev === shouldRelease ? prev : shouldRelease
+      );
+    };
+
+    const onScrollOrResize = () => {
+      if (rafId !== null) return;
+      rafId = window.requestAnimationFrame(updateSidebarMode);
+    };
+
+    updateSidebarMode();
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize);
+    desktopMedia.addEventListener('change', onScrollOrResize);
+
+    return () => {
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+      }
+      window.removeEventListener('scroll', onScrollOrResize);
+      window.removeEventListener('resize', onScrollOrResize);
+      desktopMedia.removeEventListener('change', onScrollOrResize);
+    };
+  }, []);
+
   const socials = [
     { icon: Github, href: 'https://github.com/appleayaan', label: 'GitHub' },
     { icon: Linkedin, href: 'https://www.linkedin.com/in/ayaanfaisal18/', label: 'LinkedIn' },
@@ -352,46 +396,6 @@ export default function Home() {
 
     return () => {
       isCancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const desktopMedia = window.matchMedia('(min-width: 1024px)');
-    let rafId: number | null = null;
-
-    const updateSidebarMode = () => {
-      rafId = null;
-
-      if (!desktopMedia.matches) {
-        setIsDesktopSidebarReleased(false);
-        return;
-      }
-
-      const pageBottom = document.documentElement.scrollHeight;
-      const viewportBottom = window.scrollY + window.innerHeight;
-      // Release only when reaching the end of the full page, not at sticker start.
-      setIsDesktopSidebarReleased(viewportBottom >= pageBottom - 2);
-    };
-
-    const onScrollOrResize = () => {
-      if (rafId !== null) return;
-      rafId = window.requestAnimationFrame(updateSidebarMode);
-    };
-
-    updateSidebarMode();
-    window.addEventListener('scroll', onScrollOrResize, { passive: true });
-    window.addEventListener('resize', onScrollOrResize);
-    desktopMedia.addEventListener('change', onScrollOrResize);
-
-    return () => {
-      if (rafId !== null) {
-        window.cancelAnimationFrame(rafId);
-      }
-      window.removeEventListener('scroll', onScrollOrResize);
-      window.removeEventListener('resize', onScrollOrResize);
-      desktopMedia.removeEventListener('change', onScrollOrResize);
     };
   }, []);
 
@@ -814,10 +818,11 @@ export default function Home() {
       />
       {/* Main Content Container */}
       <div ref={mainContentRef} className="flex relative">
-        {/* Left Sidebar - Fixed on desktop until page end */}
+        {/* Left Sidebar - Fixed on desktop until carousel boundary */}
+        <div className="hidden lg:block lg:w-48 lg:shrink-0">
         <aside
           data-sticker-no-drop="true"
-          className={`hidden lg:flex lg:w-48 h-screen bg-background flex-col px-6 py-12 justify-between z-20 ${isDesktopSidebarReleased ? 'absolute bottom-0 left-0' : 'fixed top-0 left-0'}`}
+          className={`flex h-screen bg-background flex-col px-6 py-12 justify-between z-20 ${isDesktopSidebarReleased ? 'absolute bottom-0 left-0' : 'fixed top-0 left-0'}`}
         >
           {/* Top Navigation */}
           <div className="flex flex-col gap-12">
@@ -929,9 +934,10 @@ export default function Home() {
 
           </div>
         </aside>
+        </div>
 
         {/* Right Column */}
-        <main className="flex-1 lg:pl-48">
+        <main className="flex-1">
           {/* Top Bar with Logo Badge and Social Icons */}
           <motion.div
             className="px-4 sm:px-6 lg:px-12 py-5 sm:py-6 flex items-center w-full"
@@ -970,6 +976,8 @@ export default function Home() {
                     <a
                       key={idx}
                       href={social.href}
+                      target="_blank"
+                      rel="noreferrer noopener"
                       aria-label={social.label}
                       className="text-black hover:text-neutral-700 transition-colors duration-300 inline-flex h-11 w-11 items-center justify-center rounded-full active:bg-muted/60 sm:h-auto sm:w-auto sm:rounded-none sm:active:bg-transparent"
                     >
@@ -1357,6 +1365,31 @@ export default function Home() {
       <audio ref={audioRef} preload="metadata" />
 
       {/* Sticker Carousel - Full Width */}
+      <div className="w-full bg-background py-3 sm:py-4">
+        <p className="flex items-center justify-center gap-3 text-[11px] sm:text-xs text-muted-foreground/65 select-none">
+          <motion.img
+            src="/images/arrow.svg"
+            alt=""
+            aria-hidden
+            className="h-4 w-4 -scale-x-100 -rotate-12 opacity-70 sm:h-5 sm:w-5"
+            initial={{ opacity: 0, y: -6, x: 4 }}
+            whileInView={{ opacity: 0.7, y: 0, x: 0 }}
+            viewport={{ once: true, amount: 0.75 }}
+            transition={{ duration: prefersReducedMotion ? 0 : 0.85, ease: 'easeOut' }}
+          />
+          <span className="tracking-wide">drag me</span>
+          <motion.img
+            src="/images/arrow.svg"
+            alt=""
+            aria-hidden
+            className="h-4 w-4 rotate-12 opacity-70 sm:h-5 sm:w-5"
+            initial={{ opacity: 0, y: -6, x: -4 }}
+            whileInView={{ opacity: 0.7, y: 0, x: 0 }}
+            viewport={{ once: true, amount: 0.75 }}
+            transition={{ duration: prefersReducedMotion ? 0 : 0.85, ease: 'easeOut', delay: prefersReducedMotion ? 0 : 0.16 }}
+          />
+        </p>
+      </div>
       <StickerCarousel />
 
       {/* Footer */}
