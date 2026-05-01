@@ -297,6 +297,7 @@ export default function Home() {
 
   const currentTrack = musicTracks[currentTrackIndex];
   const upcomingTrack = musicTracks[(currentTrackIndex + 1) % musicTracks.length];
+  const isDrakeTrack = currentTrack.artist.toLowerCase().includes('drake');
   const currentTrackLikeCount = trackLikeCounts[currentTrack.file] ?? 0;
   const currentTrackLiked = likedTracks[currentTrack.file] ?? false;
 
@@ -998,26 +999,37 @@ export default function Home() {
                   </span>
                 ) : null}
               </p>
-              <div className="flex items-center justify-center gap-2">
-                <p className="text-[10px] text-black">{currentTrack.artist}</p>
-                <button
-                  type="button"
-                  onClick={likeCurrentTrack}
-                  disabled={currentTrackLiked || likePendingTrackFile === currentTrack.file}
-                  aria-label={
-                    currentTrackLiked
-                      ? `Liked ${currentTrack.title}`
-                      : `Like ${currentTrack.title}`
-                  }
-                  className="inline-flex cursor-pointer items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] text-slate-500 transition-colors hover:text-rose-500 disabled:cursor-not-allowed disabled:opacity-85"
+              <div className="space-y-0.5">
+                <div className="flex items-center justify-center gap-2">
+                  <p className="text-[10px] text-black">{currentTrack.artist}</p>
+                  <button
+                    type="button"
+                    onClick={likeCurrentTrack}
+                    disabled={currentTrackLiked || likePendingTrackFile === currentTrack.file}
+                    aria-label={
+                      currentTrackLiked
+                        ? `Liked ${currentTrack.title}`
+                        : `Like ${currentTrack.title}`
+                    }
+                    className="inline-flex cursor-pointer items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] text-slate-500 transition-colors hover:text-rose-500 disabled:cursor-not-allowed disabled:opacity-85"
+                  >
+                    <Heart
+                      className={`h-3.5 w-3.5 ${currentTrackLiked ? 'fill-rose-500 text-rose-500' : ''}`}
+                      strokeWidth={1.9}
+                      aria-hidden
+                    />
+                    <span>{currentTrackLikeCount.toLocaleString()}</span>
+                  </button>
+                </div>
+                <p
+                  className={`text-[10px] leading-none text-[#b4975a] transition-all duration-300 ease-out motion-reduce:transition-none ${
+                    isDrakeTrack ? 'translate-y-0 opacity-100' : '-translate-y-1 opacity-0'
+                  }`}
+                  aria-hidden={!isDrakeTrack}
                 >
-                  <Heart
-                    className={`h-3.5 w-3.5 ${currentTrackLiked ? 'fill-rose-500 text-rose-500' : ''}`}
-                    strokeWidth={1.9}
-                    aria-hidden
-                  />
-                  <span>{currentTrackLikeCount.toLocaleString()}</span>
-                </button>
+                  im so OVO <span className="text-black">𓅓</span>
+             
+                </p>
               </div>
             </div>
 
@@ -1184,26 +1196,36 @@ export default function Home() {
                         </span>
                       ) : null}
                     </p>
-                    <div className="flex items-center justify-center gap-2">
-                      <p className="text-[10px] text-black">{currentTrack.artist}</p>
-                      <button
-                        type="button"
-                        onClick={likeCurrentTrack}
-                        disabled={currentTrackLiked || likePendingTrackFile === currentTrack.file}
-                        aria-label={
-                          currentTrackLiked
-                            ? `Liked ${currentTrack.title}`
-                            : `Like ${currentTrack.title}`
-                        }
-                        className="inline-flex cursor-pointer items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] text-slate-500 transition-colors hover:text-rose-500 disabled:cursor-not-allowed disabled:opacity-85"
+                    <div className="space-y-0.5">
+                      <div className="flex items-center justify-center gap-2">
+                        <p className="text-[10px] text-black">{currentTrack.artist}</p>
+                        <button
+                          type="button"
+                          onClick={likeCurrentTrack}
+                          disabled={currentTrackLiked || likePendingTrackFile === currentTrack.file}
+                          aria-label={
+                            currentTrackLiked
+                              ? `Liked ${currentTrack.title}`
+                              : `Like ${currentTrack.title}`
+                          }
+                          className="inline-flex cursor-pointer items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] text-slate-500 transition-colors hover:text-rose-500 disabled:cursor-not-allowed disabled:opacity-85"
+                        >
+                          <Heart
+                            className={`h-3.5 w-3.5 ${currentTrackLiked ? 'fill-rose-500 text-rose-500' : ''}`}
+                            strokeWidth={1.9}
+                            aria-hidden
+                          />
+                          <span>{currentTrackLikeCount.toLocaleString()}</span>
+                        </button>
+                      </div>
+                      <p
+                        className={`text-[10px] leading-none text-[#b4975a] transition-all duration-300 ease-out motion-reduce:transition-none ${
+                          isDrakeTrack ? 'translate-y-0 opacity-100' : '-translate-y-1 opacity-0'
+                        }`}
+                        aria-hidden={!isDrakeTrack}
                       >
-                        <Heart
-                          className={`h-3.5 w-3.5 ${currentTrackLiked ? 'fill-rose-500 text-rose-500' : ''}`}
-                          strokeWidth={1.9}
-                          aria-hidden
-                        />
-                        <span>{currentTrackLikeCount.toLocaleString()}</span>
-                      </button>
+                        im so OVO
+                      </p>
                     </div>
                   </div>
                 </div>
