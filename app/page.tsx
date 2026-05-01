@@ -466,7 +466,7 @@ export default function Home() {
               href="https://www.google.com/search?q=what+is+a+job."
               target="_blank"
               rel="noreferrer"
-              className="inline-flex min-h-[44px] min-w-[44px] items-center hover:text-[#688dbc] transition-colors duration-300 cursor-pointer px-2 -mx-2 sm:inline-block sm:min-h-0 sm:min-w-0 sm:px-0 sm:mx-0"
+              className="inline-flex min-h-[44px] min-w-[44px] items-center hover:text-[#688dbc] transition-colors duration-300 cursor-pointer px-2 sm:inline-block sm:min-h-0 sm:min-w-0 sm:px-0 sm:mx-0"
               {...(!prefersReducedMotion
                 ? {
                     animate: {
@@ -724,7 +724,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden">
       <Script
         id="person-jsonld"
         type="application/ld+json"
@@ -891,7 +891,7 @@ export default function Home() {
               {mobileMenuOpen ? <MenuX className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
             {/* Logo Badge */}
-            <div className="w-12 h-12 overflow-hidden rounded-full flex-shrink-0">
+            <div className="hidden sm:block w-12 h-12 overflow-hidden rounded-full flex-shrink-0">
               <img
                 src="/images/me.png"
                 alt="Ayaan Faisal"
@@ -1244,7 +1244,7 @@ export default function Home() {
                         href={project.url.href}
                         target={project.url.target}
                         rel={project.url.rel}
-                        className="group block cursor-pointer rounded-xl -mx-1 px-3 py-2 transition-colors duration-150 sm:mx-0 sm:rounded-none sm:px-0 sm:py-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:bg-secondary/35 sm:active:bg-transparent"
+                        className="group block cursor-pointer rounded-xl px-2 py-2 transition-colors duration-150 sm:mx-0 sm:rounded-none sm:px-0 sm:py-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:bg-secondary/35 sm:active:bg-transparent"
                       >
                         <div className="aspect-video overflow-hidden rounded-lg border border-border/50 bg-secondary/40">
                           {project.mediaType === 'video' ? (
@@ -1299,9 +1299,8 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="w-full border-t border-border/30 bg-background">
-        <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:gap-x-8 sm:px-6 lg:px-12 lg:py-8">
-          {/* Mobile: mark + swatch inline; lg: left column */}
-          <div className="flex w-full max-w-[220px] items-center justify-between gap-10 sm:w-auto sm:max-w-none sm:justify-normal sm:gap-0">
+        <div className="w-full px-4 py-6 sm:px-6 lg:px-12 lg:py-8">
+          <div className="flex w-full items-center justify-between">
             <img
               src="/images/logo.png"
               alt="Ayaan Faisal logo"
@@ -1310,12 +1309,12 @@ export default function Home() {
               className="h-10 w-10 shrink-0 overflow-hidden rounded-md object-cover shadow-sm ring-1 ring-black/10 sm:h-11 sm:w-11 lg:h-12 lg:w-12"
             />
             <div
-              className="h-10 w-10 shrink-0 rounded-md bg-[#cfeefe] shadow-sm ring-1 ring-black/10 transition-colors duration-300 hover:bg-[#b9e6fb] sm:hidden"
+              className="h-10 w-10 shrink-0 rounded-md bg-[#cfeefe] shadow-sm ring-1 ring-black/10 transition-colors duration-300 hover:bg-[#b9e6fb] sm:h-11 sm:w-11 lg:h-12 lg:w-12"
               aria-hidden
             />
           </div>
 
-          <div className="order-last w-full min-w-0 px-1 text-center sm:order-none sm:flex-1 sm:max-w-xl sm:px-4 lg:max-w-xl">
+          <div className="mt-4 w-full min-w-0 px-1 text-center">
             <p className="text-[11px] text-muted-foreground font-light transition-transform duration-300 ease-out hover:scale-[1.02] motion-reduce:transition-none motion-reduce:hover:scale-100 sm:text-xs">
               © {new Date().getFullYear()} ayaanfaisal.com
             </p>
@@ -1335,12 +1334,6 @@ export default function Home() {
               </a>
             </p>
           </div>
-
-          {/* Desktop / sm+: icy swatch in right slot */}
-          <div
-            className="hidden h-10 w-10 shrink-0 rounded-md bg-[#cfeefe] shadow-sm ring-1 ring-black/10 transition-colors duration-300 hover:bg-[#b9e6fb] sm:block sm:h-11 sm:w-11 lg:h-12 lg:w-12"
-            aria-hidden
-          />
         </div>
       </footer>
     </div>

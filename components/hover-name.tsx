@@ -33,7 +33,7 @@ export default function HoverName() {
         width: 'clamp(200px, 88vw, 820px)',
         aspectRatio: '1000 / 300',
         maxWidth: '100%',
-        marginLeft: 'clamp(-16px, -1.2vw, -12px)',
+        marginLeft: 'clamp(-8px, -0.6vw, -4px)',
       }}
     >
       <span className="sr-only">Ayaan Faisal</span>
