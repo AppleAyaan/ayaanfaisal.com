@@ -149,7 +149,7 @@ function toTitleCase(value: string) {
 export default function Home() {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [visitorCount, setVisitorCount] = useState<number | null>(null);
+  const [lifetimeVisits, setLifetimeVisits] = useState<number | null>(null);
   const [hoveredTag, setHoveredTag] = useState<string | null>(null);
   const [tagGifKeys, setTagGifKeys] = useState<Record<string, number>>({});
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -282,30 +282,24 @@ export default function Home() {
   useEffect(() => {
     let isCancelled = false;
 
-    const updateVisitorCount = async () => {
+    const updateLifetimeVisits = async () => {
       try {
-        const sessionKey = 'ayaanfaisal-visitor-hit-v1';
-        const hasIncrementedThisSession = window.sessionStorage.getItem(sessionKey) === '1';
-        const endpoint = hasIncrementedThisSession
-          ? 'https://api.countapi.xyz/get/ayaanfaisal.com/total-visitors'
-          : 'https://api.countapi.xyz/hit/ayaanfaisal.com/total-visitors';
-
-        const response = await fetch(endpoint);
-        if (!response.ok) return;
+        const response = await fetch('/api/visitors');
+        if (!response.ok) {
+          if (!isCancelled) setLifetimeVisits(-1);
+          return;
+        }
 
         const data: { value?: number } = await response.json();
         if (!isCancelled && typeof data.value === 'number') {
-          setVisitorCount(data.value);
-          if (!hasIncrementedThisSession) {
-            window.sessionStorage.setItem(sessionKey, '1');
-          }
+          setLifetimeVisits(data.value);
         }
       } catch {
-        // Keep UI quiet if counter API is unavailable.
+        if (!isCancelled) setLifetimeVisits(-1);
       }
     };
 
-    updateVisitorCount();
+    updateLifetimeVisits();
 
     return () => {
       isCancelled = true;
@@ -861,7 +855,8 @@ export default function Home() {
                 })}
               </div>
               <p className="text-[10px] text-slate-500/90 font-light tracking-wide">
-                visitors {visitorCount === null ? '...' : visitorCount.toLocaleString()}
+                lifetime visits:{' '}
+                {lifetimeVisits === null ? '...' : lifetimeVisits < 0 ? 'n/a' : lifetimeVisits.toLocaleString()}
               </p>
             </div>
           </motion.div>
