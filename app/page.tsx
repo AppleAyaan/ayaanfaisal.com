@@ -171,6 +171,7 @@ function toTitleCase(value: string) {
 export default function Home() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isDesktopSidebarReleased, setIsDesktopSidebarReleased] = useState(false);
   const [lifetimeVisits, setLifetimeVisits] = useState<number | null>(null);
   const [hoveredTag, setHoveredTag] = useState<string | null>(null);
   const [tagGifKeys, setTagGifKeys] = useState<Record<string, number>>({});
@@ -178,6 +179,7 @@ export default function Home() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [recordRotation, setRecordRotation] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const mainContentRef = useRef<HTMLDivElement | null>(null);
   const rotationRef = useRef(0);
   const rotationFrameRef = useRef<number | null>(null);
   // Parallax for the GIF popup driven by motion values — these write
@@ -330,6 +332,47 @@ export default function Home() {
 
     return () => {
       isCancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const desktopMedia = window.matchMedia('(min-width: 1024px)');
+    let rafId: number | null = null;
+
+    const updateSidebarMode = () => {
+      rafId = null;
+
+      if (!desktopMedia.matches) {
+        setIsDesktopSidebarReleased(false);
+        return;
+      }
+
+      const mainContent = mainContentRef.current;
+      if (!mainContent) return;
+
+      const { bottom } = mainContent.getBoundingClientRect();
+      setIsDesktopSidebarReleased(bottom <= window.innerHeight);
+    };
+
+    const onScrollOrResize = () => {
+      if (rafId !== null) return;
+      rafId = window.requestAnimationFrame(updateSidebarMode);
+    };
+
+    updateSidebarMode();
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize);
+    desktopMedia.addEventListener('change', onScrollOrResize);
+
+    return () => {
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+      }
+      window.removeEventListener('scroll', onScrollOrResize);
+      window.removeEventListener('resize', onScrollOrResize);
+      desktopMedia.removeEventListener('change', onScrollOrResize);
     };
   }, []);
 
@@ -751,11 +794,11 @@ export default function Home() {
         }}
       />
       {/* Main Content Container */}
-      <div className="flex flex-1">
-        {/* Left Sidebar - Sticky */}
+      <div ref={mainContentRef} className="flex relative">
+        {/* Left Sidebar - Fixed on desktop until sticker carousel boundary */}
         <aside
           data-sticker-no-drop="true"
-          className="hidden lg:flex lg:w-48 sticky top-0 self-start h-screen bg-background flex-col px-6 py-12 flex-shrink-0 justify-between"
+          className={`hidden lg:flex lg:w-48 h-screen bg-background flex-col px-6 py-12 justify-between z-20 ${isDesktopSidebarReleased ? 'absolute bottom-0 left-0' : 'fixed top-0 left-0'}`}
         >
           {/* Top Navigation */}
           <div className="flex flex-col gap-12">
@@ -869,7 +912,7 @@ export default function Home() {
         </aside>
 
         {/* Right Column */}
-        <main className="flex-1">
+        <main className="flex-1 lg:pl-48">
           {/* Top Bar with Logo Badge and Social Icons */}
           <motion.div
             className="px-4 sm:px-6 lg:px-12 py-5 sm:py-6 flex items-center w-full"
