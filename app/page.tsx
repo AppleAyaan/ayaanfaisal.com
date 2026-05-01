@@ -8,6 +8,7 @@ import { usePathname } from 'next/navigation';
 import Script from 'next/script';
 import StickerCarousel from '@/components/sticker-carousel';
 import HoverName from '@/components/hover-name';
+import { musicTracks } from './music-tracks';
 
 function HandDrawnUnderline({
   children,
@@ -142,22 +143,6 @@ const pageReveal = {
   hidden: { opacity: 0, y: 14 },
   visible: { opacity: 1, y: 0 },
 };
-
-const musicTracks = [
-  { file: 'NOKIA - drake.mp3', title: 'NOKIA', artist: 'Drake', artFile: 'nokia.webp', explicit: true },
-  {
-    file: 'billie jean - michael jackson.mp3',
-    title: 'Billie Jean',
-    artist: 'Michael Jackson',
-    artFile: 'billie jean.jpg',
-  },
-  { file: 'tried our best - drake.mp3', title: 'Tried Our Best', artist: 'Drake', artFile: 'tried our best.jpeg', explicit: true },
-  { file: 'what did i miss - drake.mp3', title: 'What Did I Miss', artist: 'Drake', artFile: 'what did i miss.png' },
-].map((track) => ({
-  ...track,
-  src: `/audio/${encodeURIComponent(track.file)}`,
-  artSrc: `/album-art/${encodeURIComponent(track.artFile)}`,
-}));
 
 function toTitleCase(value: string) {
   return value
