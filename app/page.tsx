@@ -167,6 +167,7 @@ export default function Home() {
   const [likedTracks, setLikedTracks] = useState<Record<string, boolean>>({});
   const [likePendingTrackFile, setLikePendingTrackFile] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const isPlayingRef = useRef(false);
   const preloadAudioRef = useRef<HTMLAudioElement | null>(null);
   const mainContentRef = useRef<HTMLDivElement | null>(null);
   const webringContainerRef = useRef<HTMLDivElement | null>(null);
@@ -300,6 +301,10 @@ export default function Home() {
   const isDrakeTrack = currentTrack.artist.toLowerCase().includes('drake');
   const currentTrackLikeCount = trackLikeCounts[currentTrack.file] ?? 0;
   const currentTrackLiked = likedTracks[currentTrack.file] ?? false;
+
+  useEffect(() => {
+    isPlayingRef.current = isPlaying;
+  }, [isPlaying]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -489,6 +494,50 @@ export default function Home() {
   const nextTrack = () => {
     setCurrentTrackIndex((prev) => (prev + 1) % musicTracks.length);
   };
+
+  useEffect(() => {
+    const onToggle = () => {
+      const audio = audioRef.current;
+      if (!audio) return;
+      if (isPlayingRef.current) {
+        audio.pause();
+        setIsPlaying(false);
+      } else {
+        audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+      }
+    };
+    const onNext = () => {
+      setCurrentTrackIndex((prev) => (prev + 1) % musicTracks.length);
+    };
+    const onPrevious = () => {
+      setCurrentTrackIndex((prev) => (prev - 1 + musicTracks.length) % musicTracks.length);
+    };
+    const onOvo = () => {
+      const drakeIndices = musicTracks
+        .map((track, index) =>
+          track.artist.toLowerCase().includes('drake') ? index : -1
+        )
+        .filter((index) => index >= 0);
+      if (drakeIndices.length === 0) return;
+
+      const randomIndex =
+        drakeIndices[Math.floor(Math.random() * drakeIndices.length)];
+      setCurrentTrackIndex(randomIndex);
+      setIsPlaying(true);
+    };
+
+    window.addEventListener('command-music-toggle', onToggle);
+    window.addEventListener('command-music-next', onNext);
+    window.addEventListener('command-music-previous', onPrevious);
+    window.addEventListener('command-music-ovo', onOvo);
+
+    return () => {
+      window.removeEventListener('command-music-toggle', onToggle);
+      window.removeEventListener('command-music-next', onNext);
+      window.removeEventListener('command-music-previous', onPrevious);
+      window.removeEventListener('command-music-ovo', onOvo);
+    };
+  }, []);
 
   const tagColors = [
     { bg: '#ffd4d4', hoverBg: '#ff8a8a' }, // TBD
@@ -1071,6 +1120,14 @@ export default function Home() {
             {/* Social Icons + Visitors */}
             <div className="ml-auto pr-0 flex flex-col items-end gap-1.5">
               <div className="flex flex-nowrap gap-2.5 sm:gap-4 items-center">
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new Event('open-command-palette'))}
+                  className="hidden sm:inline-flex items-center rounded-md border border-border/60 bg-background/70 px-2 py-1 text-[10px] font-medium tracking-wide text-slate-600 transition-colors hover:bg-muted hover:text-foreground"
+                  aria-label="Open command palette"
+                >
+                  ⌘K
+                </button>
                 {socials.map((social, idx) => {
                   const Icon = social.icon;
                   return (
@@ -1506,7 +1563,7 @@ export default function Home() {
       <audio ref={preloadAudioRef} preload="auto" aria-hidden className="hidden" />
 
       {/* Sticker Carousel - Full Width */}
-      <div className="w-full bg-background py-3 sm:py-4">
+      <div id="sticker-carousel-section" className="w-full bg-background py-3 sm:py-4">
         <p className="flex items-center justify-center gap-3 text-[11px] sm:text-xs text-muted-foreground/65 select-none">
           <motion.img
             src="/images/arrow.svg"
