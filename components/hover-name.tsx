@@ -1,22 +1,39 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function HoverName() {
   const [hovered, setHovered] = useState(false);
+  const [coarsePointer, setCoarsePointer] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(pointer: coarse)');
+    const sync = () => setCoarsePointer(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
 
   return (
     <button
       type="button"
       aria-label="Ayaan Faisal name"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className="group relative inline-block cursor-pointer p-0 bg-transparent border-0 text-left overflow-hidden"
+      aria-pressed={hovered}
+      onMouseEnter={() => {
+        if (!coarsePointer) setHovered(true);
+      }}
+      onMouseLeave={() => {
+        if (!coarsePointer) setHovered(false);
+      }}
+      onClick={() => {
+        if (coarsePointer) setHovered((v) => !v);
+      }}
+      className="group relative inline-block cursor-pointer touch-manipulation select-none p-0 bg-transparent border-0 text-left overflow-hidden"
       style={{
-        width: 'clamp(250px, 52vw, 820px)',
+        width: 'clamp(200px, 88vw, 820px)',
         aspectRatio: '1000 / 300',
         maxWidth: '100%',
-        marginLeft: 'clamp(-30px, -1.6vw, -12px)',
+        marginLeft: 'clamp(-16px, -1.2vw, -12px)',
       }}
     >
       <span className="sr-only">Ayaan Faisal</span>

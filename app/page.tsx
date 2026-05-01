@@ -1,8 +1,8 @@
 'use client';
 
-import { Github, Linkedin, Mail, Instagram, SkipBack, SkipForward, Menu, X as MenuX } from 'lucide-react';
+import { Github, Linkedin, Mail, Instagram, SkipBack, SkipForward } from 'lucide-react';
 import { useState, useEffect, useRef, type ReactNode } from 'react';
-import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { motion, useMotionValue, useTransform, useReducedMotion } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Script from 'next/script';
@@ -18,6 +18,9 @@ function HandDrawnUnderline({
   delay?: number;
   triggerOnView?: boolean;
 }) {
+  const prefersReducedMotion = useReducedMotion();
+  const underlineDone = { pathLength: 1 as const, opacity: 1 as const };
+  const underlineStart = { pathLength: 0 as const, opacity: 0 as const };
   return (
     <span className="relative inline-block align-baseline">
       <span className="relative z-10">{children}</span>
@@ -34,11 +37,23 @@ function HandDrawnUnderline({
           strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
-          initial={{ pathLength: 0, opacity: 0 }}
-          animate={triggerOnView ? undefined : { pathLength: 1, opacity: 1 }}
-          whileInView={triggerOnView ? { pathLength: 1, opacity: 1 } : undefined}
-          viewport={triggerOnView ? { once: true, amount: 0.65 } : undefined}
-          transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], delay }}
+          initial={prefersReducedMotion ? underlineDone : underlineStart}
+          animate={
+            prefersReducedMotion
+              ? underlineDone
+              : triggerOnView
+                ? undefined
+                : { pathLength: 1, opacity: 1 }
+          }
+          whileInView={
+            triggerOnView && !prefersReducedMotion ? { pathLength: 1, opacity: 1 } : undefined
+          }
+          viewport={triggerOnView && !prefersReducedMotion ? { once: true, amount: 0.65 } : undefined}
+          transition={
+            prefersReducedMotion
+              ? { duration: 0 }
+              : { duration: 1.1, ease: [0.22, 1, 0.36, 1], delay }
+          }
         />
       </motion.svg>
     </span>
@@ -52,12 +67,18 @@ function FlipbookTitle({
   text: string;
   delay?: number;
 }) {
+  const prefersReducedMotion = useReducedMotion();
   const [displayText, setDisplayText] = useState(' '.repeat(text.length));
   const [hasStarted, setHasStarted] = useState(false);
   const [isDone, setIsDone] = useState(false);
 
   useEffect(() => {
     if (!hasStarted || isDone) return;
+    if (prefersReducedMotion) {
+      setDisplayText(text);
+      setIsDone(true);
+      return;
+    }
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let revealIndex = 0;
 
@@ -86,7 +107,7 @@ function FlipbookTitle({
     return () => {
       window.clearTimeout(startTimer);
     };
-  }, [delay, hasStarted, isDone, text]);
+  }, [delay, hasStarted, isDone, prefersReducedMotion, text]);
 
   return (
     <motion.span
@@ -149,7 +170,6 @@ function toTitleCase(value: string) {
 
 export default function Home() {
   const pathname = usePathname();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [lifetimeVisits, setLifetimeVisits] = useState<number | null>(null);
   const [hoveredTag, setHoveredTag] = useState<string | null>(null);
   const [tagGifKeys, setTagGifKeys] = useState<Record<string, number>>({});
@@ -172,6 +192,11 @@ export default function Home() {
 
   // Cached center X of the currently hovered tag (in viewport coords)
   const hoveredTagCenterRef = useRef<number | null>(null);
+
+  const prefersReducedMotion = useReducedMotion();
+  const revealVariants = prefersReducedMotion
+    ? { hidden: { opacity: 1, y: 0 }, visible: { opacity: 1, y: 0 } }
+    : pageReveal;
 
   // While a tag is hovered: listen for mousemove globally AND run an
   // RAF lerp loop. Both stop the moment the tag is unhovered so they
@@ -397,9 +422,13 @@ export default function Home() {
             <motion.span
               aria-hidden="true"
               className="absolute left-0 right-0 top-1/2 h-[2px] -translate-y-1/2 bg-[#9fd0ea]"
-              initial={{ scaleX: 0, opacity: 0 }}
+              initial={{ scaleX: prefersReducedMotion ? 1 : 0, opacity: prefersReducedMotion ? 1 : 0 }}
               animate={{ scaleX: 1, opacity: 1 }}
-              transition={{ duration: 0.35, ease: 'easeOut', delay: 2.75 }}
+              transition={{
+                duration: prefersReducedMotion ? 0 : 0.35,
+                ease: 'easeOut',
+                delay: prefersReducedMotion ? 0 : 2.75,
+              }}
               style={{ transformOrigin: 'left center' }}
             />
           </span>{' '}
@@ -436,17 +465,20 @@ export default function Home() {
               href="https://www.google.com/search?q=what+is+a+job."
               target="_blank"
               rel="noreferrer"
-              className="inline-block hover:text-[#688dbc] transition-colors duration-300 cursor-pointer"
-         
-              animate={{
-                rotate: [0, -2, 1.5, -1.5, 1, 0],
-                y: [0, -1, 0, 1, 0],
-              }}
-              transition={{
-                duration: 2.4,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
+              className="inline-flex min-h-[44px] min-w-[44px] items-center hover:text-[#688dbc] transition-colors duration-300 cursor-pointer px-2 -mx-2 sm:inline-block sm:min-h-0 sm:min-w-0 sm:px-0 sm:mx-0"
+              {...(!prefersReducedMotion
+                ? {
+                    animate: {
+                      rotate: [0, -2, 1.5, -1.5, 1, 0],
+                      y: [0, -1, 0, 1, 0],
+                    },
+                    transition: {
+                      duration: 2.4,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                    },
+                  }
+                : {})}
             >
               <b>
                 <HandDrawnUnderline delay={3.2}>internships/co-ops</HandDrawnUnderline>
@@ -455,7 +487,7 @@ export default function Home() {
           ),
           type: 'plain'
         },
-        { text: 'opportunities! 🥳', type: 'plain' },
+        { text: ' opportunities! 🥳', type: 'plain' },
    
       ],
     },
@@ -522,7 +554,7 @@ export default function Home() {
       return (
         <div
           key={itemIndex}
-          className="relative inline-block"
+          className="relative mx-0.5 inline-block align-middle first:ml-0"
         >
           <a
             onMouseEnter={(e) => {
@@ -545,12 +577,12 @@ export default function Home() {
               backgroundColor: isHovered ? color.hoverBg : color.bg,
               color: isHovered ? '#ffffff' : '#000000',
             }}
-            className="inline-flex items-center px-2.5 py-0.5 rounded-none text-sm lg:text-base font-medium leading-none transition-all duration-300 relative z-10 no-underline hover:no-underline focus:no-underline"
+            className={`relative z-10 box-border inline-flex items-center rounded-none px-[5px] py-[2px] text-[0.8rem] font-medium leading-[1.15] transition-all duration-300 min-h-[1.45em] sm:min-h-[1.5em] sm:px-1.5 sm:py-[3px] sm:text-sm lg:min-h-[1.52em] lg:px-2 lg:py-0.5 lg:text-base no-underline hover:no-underline focus:no-underline max-sm:touch-manipulation ${item.icon ? 'min-w-[1.92em] justify-center' : ''}`}
           >
             {item.icon === 'x-logo' ? (
               <svg
                 viewBox="0 0 24 24"
-                className="h-[0.95em] w-[0.95em]"
+                className="h-[1.12em] w-[1.12em] shrink-0 translate-y-[0.02em]"
                 aria-hidden="true"
                 focusable="false"
               >
@@ -562,7 +594,7 @@ export default function Home() {
             ) : item.icon === 'linkedin-logo' ? (
               <Linkedin
                 aria-hidden="true"
-                className="h-[0.95em] w-[0.95em]"
+                className="h-[1.12em] w-[1.12em] shrink-0 translate-y-[0.02em]"
               />
             ) : (
               item.text
@@ -836,23 +868,18 @@ export default function Home() {
           </div>
         </aside>
 
-        {/* Mobile Menu Button */}
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="lg:hidden fixed top-4 left-4 z-40 p-2 hover:bg-muted rounded-lg transition-colors"
-        >
-          {sidebarOpen ? <MenuX size={24} /> : <Menu size={24} />}
-        </button>
-
         {/* Right Column */}
         <main className="flex-1">
           {/* Top Bar with Logo Badge and Social Icons */}
           <motion.div
-            className="px-6 lg:px-12 py-6 flex items-center w-full"
+            className="px-4 sm:px-6 lg:px-12 py-5 sm:py-6 flex items-center w-full"
             initial="hidden"
             animate="visible"
-            variants={pageReveal}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
+            variants={revealVariants}
+            transition={{
+              duration: prefersReducedMotion ? 0 : 0.5,
+              ease: 'easeOut',
+            }}
           >
             {/* Logo Badge */}
             <div className="w-12 h-12 overflow-hidden rounded-full flex-shrink-0">
@@ -865,7 +892,7 @@ export default function Home() {
 
             {/* Social Icons + Visitors */}
             <div className="ml-auto pr-0 flex flex-col items-end gap-1.5">
-              <div className="flex gap-4 items-center">
+              <div className="flex gap-3 sm:gap-4 items-center">
                 {socials.map((social, idx) => {
                   const Icon = social.icon;
                   return (
@@ -873,9 +900,9 @@ export default function Home() {
                       key={idx}
                       href={social.href}
                       aria-label={social.label}
-                      className="text-black hover:text-neutral-700 transition-colors duration-300"
+                      className="text-black hover:text-neutral-700 transition-colors duration-300 inline-flex h-11 w-11 items-center justify-center rounded-full active:bg-muted/60 sm:h-auto sm:w-auto sm:rounded-none sm:active:bg-transparent"
                     >
-                      <Icon size={18} />
+                      <Icon className="h-[21px] w-[21px] sm:h-[18px] sm:w-[18px]" strokeWidth={1.85} aria-hidden />
                     </a>
                   );
                 })}
@@ -888,142 +915,167 @@ export default function Home() {
           </motion.div>
 
           {/* Hero and Content */}
-          <div className="px-6 lg:px-12 pb-32">
+          <div className="px-4 sm:px-6 lg:px-12 pb-24 sm:pb-32">
             {/* Hero Title */}
             <motion.div
-              className="-mt-2 mb-2"
+              className="-mt-2 mb-3 sm:mb-2"
               initial="hidden"
               animate="visible"
-              variants={pageReveal}
-              transition={{ duration: 0.5, ease: 'easeOut', delay: 0.08 }}
+              variants={revealVariants}
+              transition={{
+                duration: prefersReducedMotion ? 0 : 0.5,
+                ease: 'easeOut',
+                delay: prefersReducedMotion ? 0 : 0.08,
+              }}
             >
               <HoverName />
             </motion.div>
 
             {/* Bio section */}
             <motion.div
-              className="max-w-3xl pl-1.5 pr-6 lg:pr-12"
+              className="max-w-3xl space-y-6 pl-1.5 pr-0 sm:pr-6 lg:pr-12"
               initial="hidden"
               animate="visible"
-              variants={pageReveal}
-              transition={{ duration: 0.5, ease: 'easeOut', delay: 0.18 }}
+              variants={revealVariants}
+              transition={{
+                duration: prefersReducedMotion ? 0 : 0.5,
+                ease: 'easeOut',
+                delay: prefersReducedMotion ? 0 : 0.18,
+              }}
             >
-              <div className="text-base lg:text-lg text-foreground mb-6 font-medium tracking-tight">
-                <span className="text-base lg:text-lg font-semibold">2A Math @ </span>
-                <span className="relative inline-block">
-                  {(() => {
-                    const color = {
-                      bg: '#fff2a8',
-                      hoverBg: '#e0c83f',
-                    };
-                    const isHovered = hoveredTag === 'tag-uwaterloo';
-                    const gifVersion = tagGifKeys.tagUwaterloo ?? 0;
-                    return (
-                      <>
-                        <a
-                          onMouseEnter={(e) => {
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            hoveredTagCenterRef.current =
-                              rect.left + rect.width / 2;
-                            setHoveredTag('tag-uwaterloo');
-                            setTagGifKeys((prev) => ({
-                              ...prev,
-                              tagUwaterloo: (prev.tagUwaterloo ?? 0) + 1,
-                            }));
-                          }}
-                          onMouseLeave={() => {
-                            setHoveredTag(null);
-                            hoveredTagCenterRef.current = null;
-                          }}
-                          href={tagLinks.UWaterloo}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{
-                            backgroundColor: isHovered ? color.hoverBg : color.bg,
-                            color: isHovered ? '#ffffff' : '#000000',
-                          }}
-                          className="px-3 py-1 rounded-none text-base lg:text-lg font-medium transition-none relative z-10 no-underline hover:no-underline focus:no-underline"
-                        >
-                          UWaterloo
-                        </a>
-
-                        {/* GIF Popup on Hover - Above the tag */}
-                        {hoveredTag === 'tag-uwaterloo' && (
-                          <motion.div
-                            className="absolute bottom-full left-1/2 mb-3 bg-gray-700 overflow-hidden shadow-lg z-20 pointer-events-none"
-                            style={{
-                              width: 'min(240px, 28vw)',
-                              aspectRatio: '16 / 9',
-                              border: '3px solid rgba(255, 255, 255, 1)',
-                              boxShadow: '0 0 0 1px rgba(0, 0, 0, 0.18)',
-                              animation:
-                                'popUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                              marginLeft: parallaxMargin,
+              <div className="space-y-1.5">
+                <p className="text-base lg:text-lg font-medium tracking-tight text-foreground leading-snug">
+                  <span className="font-semibold">2A Math @ </span>
+                  <span className="relative inline-block align-bottom">
+                    {(() => {
+                      const color = {
+                        bg: '#fff2a8',
+                        hoverBg: '#e0c83f',
+                      };
+                      const isHovered = hoveredTag === 'tag-uwaterloo';
+                      const gifVersion = tagGifKeys.tagUwaterloo ?? 0;
+                      return (
+                        <>
+                          <a
+                            onMouseEnter={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              hoveredTagCenterRef.current =
+                                rect.left + rect.width / 2;
+                              setHoveredTag('tag-uwaterloo');
+                              setTagGifKeys((prev) => ({
+                                ...prev,
+                                tagUwaterloo: (prev.tagUwaterloo ?? 0) + 1,
+                              }));
                             }}
+                            onMouseLeave={() => {
+                              setHoveredTag(null);
+                              hoveredTagCenterRef.current = null;
+                            }}
+                            href={tagLinks.UWaterloo}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{
+                              backgroundColor: isHovered ? color.hoverBg : color.bg,
+                              color: isHovered ? '#ffffff' : '#000000',
+                            }}
+                            className="inline-flex items-center rounded-none px-2 py-0.5 text-[0.9em] sm:px-3 sm:py-1 sm:text-[1em] font-medium leading-tight transition-none relative z-10 touch-manipulation no-underline hover:no-underline focus:no-underline"
                           >
-                            <style>{`
-                              @keyframes popUp {
-                                0% {
-                                  opacity: 0;
-                                  transform: scale(0.3) translateY(20px);
+                            UWaterloo
+                          </a>
+
+                          {/* GIF Popup on Hover - Above the tag */}
+                          {hoveredTag === 'tag-uwaterloo' && (
+                            <motion.div
+                              className="absolute bottom-full left-1/2 mb-3 bg-gray-700 overflow-hidden shadow-lg z-20 pointer-events-none"
+                              style={{
+                                width: 'min(240px, 28vw)',
+                                aspectRatio: '16 / 9',
+                                border: '3px solid rgba(255, 255, 255, 1)',
+                                boxShadow: '0 0 0 1px rgba(0, 0, 0, 0.18)',
+                                animation:
+                                  'popUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                marginLeft: parallaxMargin,
+                              }}
+                            >
+                              <style>{`
+                                @keyframes popUp {
+                                  0% {
+                                    opacity: 0;
+                                    transform: scale(0.3) translateY(20px);
+                                  }
+                                  100% {
+                                    opacity: 1;
+                                    transform: scale(1) translateY(0);
+                                  }
                                 }
-                                100% {
-                                  opacity: 1;
-                                  transform: scale(1) translateY(0);
-                                }
-                              }
-                            `}</style>
-                            <img
-                              key={gifVersion}
-                              src="/tag-gifs/uwaterloo.gif"
-                              alt="uwaterloo popup gif"
-                              className="w-full h-full object-cover block"
-                            />
-                          </motion.div>
-                        )}
-                      </>
-                    );
-                  })()}
-                </span>
-                <p className="text-sm lg:text-base text-muted-foreground mb-8 leading-relaxed">
+                              `}</style>
+                              <img
+                                key={gifVersion}
+                                src="/tag-gifs/uwaterloo.gif"
+                                alt="uwaterloo popup gif"
+                                className="w-full h-full object-cover block"
+                              />
+                            </motion.div>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </span>
+                </p>
+                <p className="mt-0 text-base text-muted-foreground leading-snug">
                   <em>
-                    "
-                    <HandDrawnUnderline delay={1.95}>
-                      <motion.span
-                        className="inline-block bg-clip-text text-transparent"
-                        style={{
-                          backgroundImage: 'linear-gradient(110deg, #b18734 0%, #d8b56b 45%, #e8cf94 60%, #b18734 100%)',
-                          backgroundSize: '220% 100%',
-                        }}
-                        animate={{ backgroundPosition: ['0% 50%', '100% 50%'] }}
-                        transition={{ duration: 3.2, repeat: Infinity, ease: 'linear' }}
-                      >
-                        you can just build things
-                      </motion.span>
+                    &quot;
+                    <HandDrawnUnderline delay={0.55}>
+                      {prefersReducedMotion ? (
+                        <span
+                          className="inline-block bg-gradient-to-r from-[#b18734] via-[#d8b56b] to-[#e8cf94] bg-clip-text text-transparent"
+                          style={{ WebkitBackgroundClip: 'text' }}
+                        >
+                          you can just build things
+                        </span>
+                      ) : (
+                        <motion.span
+                          className="inline-block bg-clip-text text-transparent"
+                          style={{
+                            backgroundImage:
+                              'linear-gradient(110deg, #b18734 0%, #d8b56b 45%, #e8cf94 60%, #b18734 100%)',
+                            backgroundSize: '220% 100%',
+                          }}
+                          animate={{ backgroundPosition: ['0% 50%', '100% 50%'] }}
+                          transition={{ duration: 3.2, repeat: Infinity, ease: 'linear' }}
+                        >
+                          you can just build things
+                        </motion.span>
+                      )}
                     </HandDrawnUnderline>
-                    ..."
+                    &quot;
                   </em>
                 </p>
-           
               </div>
 
               {/* Experience List */}
               <motion.div
-                className="space-y-2 text-sm lg:text-base font-medium tracking-tight mb-16"
+                className="space-y-2 text-sm sm:text-base font-medium tracking-tight mb-16"
                 initial="hidden"
                 animate="visible"
-                variants={pageReveal}
-                transition={{ duration: 0.5, ease: 'easeOut', delay: 0.4, staggerChildren: 0.14 }}
+                variants={revealVariants}
+                transition={{
+                  duration: prefersReducedMotion ? 0 : 0.5,
+                  ease: 'easeOut',
+                  delay: prefersReducedMotion ? 0 : 0.4,
+                  staggerChildren: prefersReducedMotion ? 0 : 0.14,
+                }}
               >
                 {experiences.map((exp, expIdx) => (
                   <motion.div
                     key={expIdx}
-                    className="flex flex-wrap items-center gap-x-0.5 gap-y-1"
-                    variants={pageReveal}
+                    className="flex flex-nowrap items-baseline gap-x-2"
+                    variants={revealVariants}
                   >
-                    <span className="text-muted-foreground font-medium">&gt;</span>
-                    <span className="text-foreground font-medium text-inherit">{exp.title}</span>
-                    <div className="flex flex-wrap gap-1.5 text-inherit">
+                    <span className="text-muted-foreground font-medium shrink-0 select-none">&gt;</span>
+                    <div className="min-w-0 flex-1 text-foreground leading-relaxed text-inherit [&_span]:break-words">
+                      {exp.title}
+                      {' '}
                       {exp.items.map((item, itemIdx) => renderItem(item, itemIdx, expIdx))}
                     </div>
                   </motion.div>
@@ -1034,16 +1086,27 @@ export default function Home() {
               <motion.div
                 initial="hidden"
                 animate="visible"
-                variants={pageReveal}
-                transition={{ duration: 0.5, ease: 'easeOut', delay: 0.52 }}
+                variants={revealVariants}
+                transition={{
+                  duration: prefersReducedMotion ? 0 : 0.5,
+                  ease: 'easeOut',
+                  delay: prefersReducedMotion ? 0 : 0.52,
+                }}
               >
-                <h3 className="text-lg font-semibold text-foreground mb-6">projects 🚧</h3>
+                <h3 className="text-base sm:text-lg font-semibold text-foreground mb-5 sm:mb-6">
+                  projects 🚧
+                </h3>
                 <motion.div
                   className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                  variants={pageReveal}
+                  variants={revealVariants}
                   initial="hidden"
                   animate="visible"
-                  transition={{ duration: 0.5, ease: 'easeOut', delay: 0.58, staggerChildren: 0.12 }}
+                  transition={{
+                    duration: prefersReducedMotion ? 0 : 0.5,
+                    ease: 'easeOut',
+                    delay: prefersReducedMotion ? 0 : 0.58,
+                    staggerChildren: prefersReducedMotion ? 0 : 0.12,
+                  }}
                 >
                   {projects.map((project, idx) => (
                     (() => {
@@ -1051,15 +1114,19 @@ export default function Home() {
                       return (
                     <motion.div
                       key={idx}
-                      className="space-y-2.5"
-                      variants={pageReveal}
-                      transition={{ duration: 0.45, ease: 'easeOut', staggerChildren: 0.08 }}
+                      className=""
+                      variants={revealVariants}
+                      transition={{
+                        duration: prefersReducedMotion ? 0 : 0.45,
+                        ease: 'easeOut',
+                        staggerChildren: prefersReducedMotion ? 0 : 0.08,
+                      }}
                     >
                       <a
                         href={project.url.href}
                         target={project.url.target}
                         rel={project.url.rel}
-                        className="group block cursor-pointer"
+                        className="group block cursor-pointer rounded-xl -mx-1 px-3 py-2 transition-colors duration-150 sm:mx-0 sm:rounded-none sm:px-0 sm:py-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:bg-secondary/35 sm:active:bg-transparent"
                       >
                         <div className="aspect-video overflow-hidden rounded-lg border border-border/50 bg-secondary/40">
                           {project.mediaType === 'video' ? (
@@ -1079,29 +1146,23 @@ export default function Home() {
                             />
                           )}
                         </div>
-                      </a>
-                      <div className="space-y-0.5">
-                        <div className="flex items-baseline justify-between gap-4">
-                          <motion.a
-                            href={project.url.href}
-                            target={project.url.target}
-                            rel={project.url.rel}
-                            className="text-xl font-semibold text-foreground leading-tight hover:opacity-80 transition-opacity cursor-pointer"
-                            variants={pageReveal}
-                          >
-                            <FlipbookTitle text={project.title} delay={titleUnderlineDelay} />
-                          </motion.a>
-                          <motion.span
-                            className="text-2xl font-semibold text-slate-500 leading-none"
-                            variants={pageReveal}
-                          >
-                            {project.date}
-                          </motion.span>
+                        <div className="space-y-0.5 pt-3 sm:pt-2">
+                          <div className="flex items-baseline justify-between gap-3 sm:gap-4">
+                            <span className="text-lg sm:text-xl font-semibold text-foreground leading-tight transition-opacity duration-150 group-hover:opacity-90 sm:group-hover:opacity-80">
+                              <FlipbookTitle text={project.title} delay={titleUnderlineDelay} />
+                            </span>
+                            <motion.span
+                              className="text-xl sm:text-2xl font-semibold text-slate-500 shrink-0 leading-none tabular-nums"
+                              variants={revealVariants}
+                            >
+                              {project.date}
+                            </motion.span>
+                          </div>
+                          <div className="text-base text-muted-foreground leading-relaxed">
+                            {project.description}
+                          </div>
                         </div>
-                        <p className="text-base text-muted-foreground leading-relaxed">
-                          {project.description}
-                        </p>
-                      </div>
+                      </a>
                     </motion.div>
                       );
                     })()
@@ -1117,40 +1178,51 @@ export default function Home() {
       {/* Sticker Carousel - Full Width */}
       <StickerCarousel />
 
-      {/* Footer - Full Width */}
-      <footer className="w-full border-t border-border/30 bg-background px-6 lg:px-12 py-8 flex items-center justify-between">
-        {/* Left Logo */}
-        <div className="w-12 h-12 overflow-hidden rounded-md flex-shrink-0">
-          <img
-            src="/images/logo.png"
-            alt="Ayaan Faisal logo"
-            className="w-full h-full object-cover block"
+      {/* Footer */}
+      <footer className="w-full border-t border-border/30 bg-background">
+        <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:gap-x-8 sm:px-6 lg:px-12 lg:py-8">
+          {/* Mobile: mark + swatch inline; lg: left column */}
+          <div className="flex w-full max-w-[220px] items-center justify-between gap-10 sm:w-auto sm:max-w-none sm:justify-normal sm:gap-0">
+            <img
+              src="/images/logo.png"
+              alt="Ayaan Faisal logo"
+              width={44}
+              height={44}
+              className="h-10 w-10 shrink-0 overflow-hidden rounded-md object-cover shadow-sm ring-1 ring-black/10 sm:h-11 sm:w-11 lg:h-12 lg:w-12"
+            />
+            <div
+              className="h-10 w-10 shrink-0 rounded-md bg-[#cfeefe] shadow-sm ring-1 ring-black/10 transition-colors duration-300 hover:bg-[#b9e6fb] sm:hidden"
+              aria-hidden
+            />
+          </div>
+
+          <div className="order-last w-full min-w-0 px-1 text-center sm:order-none sm:flex-1 sm:max-w-xl sm:px-4 lg:max-w-xl">
+            <p className="text-[11px] text-muted-foreground font-light transition-transform duration-300 ease-out hover:scale-[1.02] motion-reduce:transition-none motion-reduce:hover:scale-100 sm:text-xs">
+              © {new Date().getFullYear()} ayaanfaisal.com
+            </p>
+            <p className="mx-auto mt-1 max-w-sm text-[10px] leading-snug text-muted-foreground/80 font-light sm:max-w-md sm:text-[11px] sm:leading-normal">
+              Designed in{' '}
+              <a href="https://www.figma.com" target="_blank" rel="noreferrer" className="underline-offset-4 hover:text-foreground hover:underline transition-colors">
+                Figma
+              </a>
+              . Help from{' '}
+              <a href="https://v0.dev" target="_blank" rel="noreferrer" className="underline-offset-4 hover:text-foreground hover:underline transition-colors">
+                v0
+              </a>
+              {' '}
+              and{' '}
+              <a href="https://cursor.com" target="_blank" rel="noreferrer" className="underline-offset-4 hover:text-foreground hover:underline transition-colors">
+                Cursor
+              </a>
+            </p>
+          </div>
+
+          {/* Desktop / sm+: icy swatch in right slot */}
+          <div
+            className="hidden h-10 w-10 shrink-0 rounded-md bg-[#cfeefe] shadow-sm ring-1 ring-black/10 transition-colors duration-300 hover:bg-[#b9e6fb] sm:block sm:h-11 sm:w-11 lg:h-12 lg:w-12"
+            aria-hidden
           />
         </div>
-
-        {/* Copyright */}
-        <div className="text-center flex-1">
-          <p className="text-xs text-muted-foreground font-light transition-transform duration-300 ease-out hover:scale-105">
-            © 2026 ayaanfaisal.com
-          </p>
-          <p className="mt-1 text-[10px] text-muted-foreground/80 font-light">
-            Designed in{' '}
-            <a href="https://www.figma.com" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">
-              Figma
-            </a>
-            . Help from{' '}
-            <a href="https://v0.dev" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">
-              v0
-            </a>
-            {' '}and{' '}
-            <a href="https://cursor.com" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors">
-              Cursor
-            </a>
-          </p>
-        </div>
-
-        {/* Right Logo */}
-        <div className="w-12 h-12 bg-[#cfeefe] rounded-md flex-shrink-0 transition-colors duration-300 hover:bg-[#b9e6fb]"></div>
       </footer>
     </div>
   );
