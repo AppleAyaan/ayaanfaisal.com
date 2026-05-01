@@ -41,6 +41,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { applyThemeWithEntranceReplay } from '@/lib/theme-transition';
+import { useThemeEntranceReplay } from '@/components/theme-entrance-replay';
 
 type PaletteCommand = {
   id: string;
@@ -78,7 +80,8 @@ const RESUME_PATH = '/resume.pdf';
 export default function CommandPalette() {
   const router = useRouter();
   const prefersReducedMotion = useReducedMotion();
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
+  const { bumpEntranceAnimations } = useThemeEntranceReplay();
 
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -230,10 +233,11 @@ export default function CommandPalette() {
         label: 'Toggle light/dark mode',
         keywords: 'theme light dark appearance',
         section: 'Actions',
-        icon: theme === 'dark' ? Sun : MoonStar,
+        icon: resolvedTheme === 'dark' ? Sun : MoonStar,
         run: () => {
-          setTheme(theme === 'dark' ? 'light' : 'dark');
-          setStatusText(theme === 'dark' ? 'Light mode enabled' : 'Dark mode enabled');
+          const next = resolvedTheme === 'dark' ? 'light' : 'dark';
+          applyThemeWithEntranceReplay(setTheme, next, bumpEntranceAnimations);
+          setStatusText(next === 'dark' ? 'Dark mode enabled' : 'Light mode enabled');
           setOpen(false);
         },
       },
@@ -308,7 +312,7 @@ export default function CommandPalette() {
         },
       },
     ],
-    [router, setTheme, theme]
+    [router, setTheme, resolvedTheme, bumpEntranceAnimations]
   );
 
   const commandSections: Array<PaletteCommand['section']> = [
@@ -386,7 +390,33 @@ export default function CommandPalette() {
                 ))}
               </CommandList>
               <div className="flex items-center justify-between border-t border-border/70 px-3 py-2 text-[11px] text-muted-foreground">
-                <span aria-live="polite">{statusText || 'Use ↑ ↓ to navigate, Enter to run'}</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
+                      applyThemeWithEntranceReplay(
+                        setTheme,
+                        nextTheme,
+                        bumpEntranceAnimations
+                      );
+                      setStatusText(
+                        nextTheme === 'dark' ? 'Dark mode enabled' : 'Light mode enabled'
+                      );
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-border/80 px-2 py-1 text-[10px] text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                    aria-label={`Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} mode`}
+                    title={`Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} mode`}
+                  >
+                    {resolvedTheme === 'dark' ? (
+                      <Sun className="h-3.5 w-3.5" aria-hidden />
+                    ) : (
+                      <MoonStar className="h-3.5 w-3.5" aria-hidden />
+                    )}
+                    <span>{resolvedTheme === 'dark' ? 'Light' : 'Dark'}</span>
+                  </button>
+                  <span aria-live="polite">{statusText || 'Use ↑ ↓ to navigate, Enter to run'}</span>
+                </div>
                 <span className="rounded border border-border/80 px-1.5 py-0.5 text-[10px] text-muted-foreground">
                   esc
                 </span>

@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next"
 import TabTitle from '@/components/tab-title'
 import CommandPalette from '@/components/command-palette'
 import { ThemeProvider } from '@/components/theme-provider'
+import { ThemeEntranceReplayProvider } from '@/components/theme-entrance-replay'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -64,11 +65,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="font-sans antialiased">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <TabTitle />
-          {children}
-          <CommandPalette />
-          <Analytics />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <ThemeEntranceReplayProvider>
+            <TabTitle />
+            {children}
+            <CommandPalette />
+            <Analytics />
+          </ThemeEntranceReplayProvider>
         </ThemeProvider>
       </body>
     </html>

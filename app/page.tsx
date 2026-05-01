@@ -1,14 +1,17 @@
 'use client';
 
-import { Github, Linkedin, Mail, Instagram, SkipBack, SkipForward, Menu, X as MenuX, Heart } from 'lucide-react';
-import { useState, useEffect, useRef, type ReactNode } from 'react';
+import { Github, Linkedin, Mail, Instagram, SkipBack, SkipForward, Menu, X as MenuX, Heart, Sun, MoonStar } from 'lucide-react';
+import { Fragment, useState, useEffect, useRef, type ReactNode } from 'react';
 import { motion, useMotionValue, useTransform, useReducedMotion } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useTheme } from 'next-themes';
 import Script from 'next/script';
 import StickerCarousel from '@/components/sticker-carousel';
 import HoverName from '@/components/hover-name';
 import { musicTracks } from './music-tracks';
+import { applyThemeWithEntranceReplay } from '@/lib/theme-transition';
+import { useThemeEntranceReplay } from '@/components/theme-entrance-replay';
 
 function HandDrawnUnderline({
   children,
@@ -155,6 +158,9 @@ function toTitleCase(value: string) {
 
 export default function Home() {
   const pathname = usePathname();
+  const { resolvedTheme, setTheme } = useTheme();
+  const { epoch: entranceReplayEpoch, bumpEntranceAnimations } = useThemeEntranceReplay();
+  const [themeMounted, setThemeMounted] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isDesktopSidebarReleased, setIsDesktopSidebarReleased] = useState(false);
   const [lifetimeVisits, setLifetimeVisits] = useState<number | null>(null);
@@ -186,6 +192,10 @@ export default function Home() {
 
   // Cached center X of the currently hovered tag (in viewport coords)
   const hoveredTagCenterRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    setThemeMounted(true);
+  }, []);
 
   const prefersReducedMotion = useReducedMotion();
   const revealVariants = prefersReducedMotion
@@ -984,7 +994,7 @@ export default function Home() {
           <div className="space-y-4">
             <div className="flex items-center justify-center gap-3">
               <button
-                className="p-1 text-black hover:text-black/80 transition-colors cursor-pointer"
+                className="p-1 text-foreground/85 hover:text-foreground transition-colors cursor-pointer"
                 aria-label="Previous track"
                 onClick={previousTrack}
               >
@@ -1026,7 +1036,7 @@ export default function Home() {
               </button>
 
               <button
-                className="p-1 text-black hover:text-black/80 transition-colors cursor-pointer"
+                className="p-1 text-foreground/85 hover:text-foreground transition-colors cursor-pointer"
                 aria-label="Next track"
                 onClick={nextTrack}
               >
@@ -1050,7 +1060,7 @@ export default function Home() {
               </p>
               <div className="space-y-0.5">
                 <div className="flex items-center justify-center gap-2">
-                  <p className="text-[10px] text-black">{currentTrack.artist}</p>
+                  <p className="text-[10px] text-foreground/85">{currentTrack.artist}</p>
                   <button
                     type="button"
                     onClick={likeCurrentTrack}
@@ -1076,7 +1086,7 @@ export default function Home() {
                   }`}
                   aria-hidden={!isDrakeTrack}
                 >
-                  im so OVO <span className="text-black">𓅓</span>
+                  im so OVO <span className="text-foreground/85">𓅓</span>
              
                 </p>
               </div>
@@ -1088,6 +1098,7 @@ export default function Home() {
 
         {/* Right Column */}
         <main className="flex-1">
+          <Fragment key={`home-entrance-${entranceReplayEpoch}`}>
           {/* Top Bar with Logo Badge and Social Icons */}
           <motion.div
             className="px-4 sm:px-6 lg:px-12 py-5 sm:py-6 flex items-start sm:items-center w-full"
@@ -1117,17 +1128,9 @@ export default function Home() {
               />
             </div>
 
-            {/* Social Icons + Visitors */}
+            {/* Social Icons + Visitors + theme / palette */}
             <div className="ml-auto pr-0 flex flex-col items-end gap-1.5">
-              <div className="flex flex-nowrap gap-2.5 sm:gap-4 items-center">
-                <button
-                  type="button"
-                  onClick={() => window.dispatchEvent(new Event('open-command-palette'))}
-                  className="hidden sm:inline-flex items-center rounded-md border border-border/60 bg-background/70 px-2 py-1 text-[10px] font-medium tracking-wide text-slate-600 transition-colors hover:bg-muted hover:text-foreground"
-                  aria-label="Open command palette"
-                >
-                  ⌘K
-                </button>
+              <div className="flex flex-nowrap gap-2.5 sm:gap-4 items-center justify-end">
                 {socials.map((social, idx) => {
                   const Icon = social.icon;
                   return (
@@ -1137,17 +1140,54 @@ export default function Home() {
                       target="_blank"
                       rel="noreferrer noopener"
                       aria-label={social.label}
-                      className="text-black hover:text-neutral-700 transition-colors duration-300 inline-flex h-9 w-9 items-center justify-center rounded-full active:bg-muted/60 sm:h-auto sm:w-auto sm:rounded-none sm:active:bg-transparent"
+                      className="text-foreground/85 hover:text-foreground transition-colors duration-300 inline-flex h-9 w-9 items-center justify-center rounded-full active:bg-muted/60 sm:h-auto sm:w-auto sm:rounded-none sm:active:bg-transparent"
                     >
                       <Icon className="h-[18px] w-[18px] sm:h-[18px] sm:w-[18px]" strokeWidth={1.85} aria-hidden />
                     </a>
                   );
                 })}
               </div>
-              <p className="text-[10px] text-slate-500/90 font-light tracking-wide">
+              <p className="text-[10px] text-slate-500/90 font-light tracking-wide text-right">
                 lifetime visits:{' '}
                 {lifetimeVisits === null ? '...' : lifetimeVisits < 0 ? 'n/a' : lifetimeVisits.toLocaleString()}
               </p>
+              <div className="hidden sm:flex flex-nowrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    applyThemeWithEntranceReplay(
+                      setTheme,
+                      resolvedTheme === 'dark' ? 'light' : 'dark',
+                      bumpEntranceAnimations
+                    )
+                  }
+                  className="inline-flex items-center justify-center p-1 text-muted-foreground transition-colors hover:text-foreground"
+                  aria-label={
+                    resolvedTheme === 'dark'
+                      ? 'Switch to light mode'
+                      : 'Switch to dark mode'
+                  }
+                  title={
+                    resolvedTheme === 'dark'
+                      ? 'Switch to light mode'
+                      : 'Switch to dark mode'
+                  }
+                >
+                  {themeMounted && resolvedTheme === 'dark' ? (
+                    <Sun className="h-4 w-4" strokeWidth={1.85} aria-hidden />
+                  ) : (
+                    <MoonStar className="h-4 w-4" strokeWidth={1.85} aria-hidden />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new Event('open-command-palette'))}
+                  className="inline-flex items-center rounded-md border border-border/60 bg-background/70 px-2 py-1 text-[10px] font-medium tracking-wide text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  aria-label="Open command palette"
+                >
+                  ⌘K
+                </button>
+              </div>
             </div>
           </motion.div>
 
@@ -1189,7 +1229,7 @@ export default function Home() {
                 <div className="pt-1 border-t border-border/40">
                   <div className="flex items-center justify-center gap-4">
                     <button
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-md text-black hover:bg-muted transition-colors"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground/85 hover:bg-muted hover:text-foreground transition-colors"
                       aria-label="Previous track"
                       onClick={previousTrack}
                     >
@@ -1231,7 +1271,7 @@ export default function Home() {
                     </button>
 
                     <button
-                      className="inline-flex h-9 w-9 items-center justify-center rounded-md text-black hover:bg-muted transition-colors"
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-md text-foreground/85 hover:bg-muted hover:text-foreground transition-colors"
                       aria-label="Next track"
                       onClick={nextTrack}
                     >
@@ -1255,7 +1295,7 @@ export default function Home() {
                     </p>
                     <div className="space-y-0.5">
                       <div className="flex items-center justify-center gap-2">
-                        <p className="text-[10px] text-black">{currentTrack.artist}</p>
+                        <p className="text-[10px] text-foreground/85">{currentTrack.artist}</p>
                         <button
                           type="button"
                           onClick={likeCurrentTrack}
@@ -1310,7 +1350,7 @@ export default function Home() {
                   src="/images/arrow.svg"
                   alt=""
                   aria-hidden
-                  className="h-3.5 w-3.5 -rotate-90 opacity-70"
+                  className="h-3.5 w-3.5 -rotate-90 opacity-70 dark:invert"
                 />
                 <span className="tracking-wide">click me</span>
               </div>
@@ -1557,6 +1597,7 @@ export default function Home() {
 
             </motion.div>
           </div>
+          </Fragment>
         </main>
       </div>
       <audio ref={audioRef} preload="auto" />
@@ -1564,12 +1605,13 @@ export default function Home() {
 
       {/* Sticker Carousel - Full Width */}
       <div id="sticker-carousel-section" className="w-full bg-background py-3 sm:py-4">
+        <Fragment key={`carousel-hint-${entranceReplayEpoch}`}>
         <p className="flex items-center justify-center gap-3 text-[11px] sm:text-xs text-muted-foreground/65 select-none">
           <motion.img
             src="/images/arrow.svg"
             alt=""
             aria-hidden
-            className="h-4 w-4 -scale-x-100 -rotate-12 opacity-70 sm:h-5 sm:w-5"
+            className="h-4 w-4 -scale-x-100 -rotate-12 opacity-70 dark:invert sm:h-5 sm:w-5"
             initial={{ opacity: 0, y: -6, x: 4 }}
             whileInView={{ opacity: 0.7, y: 0, x: 0 }}
             viewport={{ once: true, amount: 0.75 }}
@@ -1580,13 +1622,14 @@ export default function Home() {
             src="/images/arrow.svg"
             alt=""
             aria-hidden
-            className="h-4 w-4 rotate-12 opacity-70 sm:h-5 sm:w-5"
+            className="h-4 w-4 rotate-12 opacity-70 dark:invert sm:h-5 sm:w-5"
             initial={{ opacity: 0, y: -6, x: -4 }}
             whileInView={{ opacity: 0.7, y: 0, x: 0 }}
             viewport={{ once: true, amount: 0.75 }}
             transition={{ duration: prefersReducedMotion ? 0 : 0.85, ease: 'easeOut', delay: prefersReducedMotion ? 0 : 0.16 }}
           />
         </p>
+        </Fragment>
       </div>
       <StickerCarousel />
 
