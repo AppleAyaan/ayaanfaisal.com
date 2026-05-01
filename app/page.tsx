@@ -369,11 +369,10 @@ export default function Home() {
         return;
       }
 
-      const mainContent = mainContentRef.current;
-      if (!mainContent) return;
-
-      const { bottom } = mainContent.getBoundingClientRect();
-      setIsDesktopSidebarReleased(bottom <= window.innerHeight);
+      const pageBottom = document.documentElement.scrollHeight;
+      const viewportBottom = window.scrollY + window.innerHeight;
+      // Release only when reaching the end of the full page, not at sticker start.
+      setIsDesktopSidebarReleased(viewportBottom >= pageBottom - 2);
     };
 
     const onScrollOrResize = () => {
@@ -815,7 +814,7 @@ export default function Home() {
       />
       {/* Main Content Container */}
       <div ref={mainContentRef} className="flex relative">
-        {/* Left Sidebar - Fixed on desktop until sticker carousel boundary */}
+        {/* Left Sidebar - Fixed on desktop until page end */}
         <aside
           data-sticker-no-drop="true"
           className={`hidden lg:flex lg:w-48 h-screen bg-background flex-col px-6 py-12 justify-between z-20 ${isDesktopSidebarReleased ? 'absolute bottom-0 left-0' : 'fixed top-0 left-0'}`}
@@ -1099,7 +1098,7 @@ export default function Home() {
           <div className="px-4 sm:px-6 lg:px-12 pb-24 sm:pb-32">
             {/* Hero Title */}
             <motion.div
-              className="-mt-2 mb-3 sm:mb-2"
+              className="-mx-4 -mt-2 mb-3 sm:mx-0 sm:mb-2 lg:-ml-8"
               initial="hidden"
               animate="visible"
               variants={revealVariants}

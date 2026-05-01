@@ -30,10 +30,10 @@ export default function HoverName() {
       }}
       className="group relative inline-block cursor-pointer touch-manipulation select-none p-0 bg-transparent border-0 text-left overflow-hidden"
       style={{
-        width: 'clamp(200px, 88vw, 820px)',
+        width: 'min(820px, 100%)',
         aspectRatio: '1000 / 300',
         maxWidth: '100%',
-        marginLeft: 'clamp(-8px, -0.6vw, -4px)',
+        marginLeft: 0,
       }}
     >
       <span className="sr-only">Ayaan Faisal</span>
