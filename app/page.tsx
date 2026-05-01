@@ -1,6 +1,6 @@
 'use client';
 
-import { Github, Linkedin, Mail, Instagram, SkipBack, SkipForward, Menu, X as MenuX } from 'lucide-react';
+import { Github, Linkedin, Mail, Instagram, SkipBack, SkipForward, Menu, X as MenuX, Heart } from 'lucide-react';
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { motion, useMotionValue, useTransform, useReducedMotion } from 'framer-motion';
 import Link from 'next/link';
@@ -163,7 +163,11 @@ export default function Home() {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [recordRotation, setRecordRotation] = useState(0);
+  const [trackLikeCounts, setTrackLikeCounts] = useState<Record<string, number>>({});
+  const [likedTracks, setLikedTracks] = useState<Record<string, boolean>>({});
+  const [likePendingTrackFile, setLikePendingTrackFile] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const preloadAudioRef = useRef<HTMLAudioElement | null>(null);
   const mainContentRef = useRef<HTMLDivElement | null>(null);
   const webringContainerRef = useRef<HTMLDivElement | null>(null);
   const rotationRef = useRef(0);
@@ -292,6 +296,9 @@ export default function Home() {
   ];
 
   const currentTrack = musicTracks[currentTrackIndex];
+  const upcomingTrack = musicTracks[(currentTrackIndex + 1) % musicTracks.length];
+  const currentTrackLikeCount = trackLikeCounts[currentTrack.file] ?? 0;
+  const currentTrackLiked = likedTracks[currentTrack.file] ?? false;
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -322,6 +329,15 @@ export default function Home() {
   }, [currentTrackIndex, currentTrack.src]);
 
   useEffect(() => {
+    const preloadAudio = preloadAudioRef.current;
+    if (!preloadAudio) return;
+    if (!upcomingTrack?.src) return;
+
+    preloadAudio.src = upcomingTrack.src;
+    preloadAudio.load();
+  }, [upcomingTrack?.src]);
+
+  useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -331,6 +347,74 @@ export default function Home() {
       audio.pause();
     }
   }, [isPlaying]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadTrackLikeState = async () => {
+      try {
+        const response = await fetch(
+          `/api/music-likes?track=${encodeURIComponent(currentTrack.file)}`,
+          { cache: 'no-store' }
+        );
+        if (!response.ok) return;
+        const data: { track?: string; count?: number; liked?: boolean } = await response.json();
+        if (cancelled || data.track !== currentTrack.file) return;
+        setTrackLikeCounts((prev) => ({
+          ...prev,
+          [currentTrack.file]: typeof data.count === 'number' ? data.count : 0,
+        }));
+        setLikedTracks((prev) => ({
+          ...prev,
+          [currentTrack.file]: Boolean(data.liked),
+        }));
+      } catch {
+        // noop: likes are non-blocking UI sugar
+      }
+    };
+    loadTrackLikeState();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentTrack.file]);
+
+  const likeCurrentTrack = async () => {
+    const trackFile = currentTrack.file;
+    if (likedTracks[trackFile] || likePendingTrackFile === trackFile) return;
+
+    setLikePendingTrackFile(trackFile);
+    setLikedTracks((prev) => ({ ...prev, [trackFile]: true }));
+    setTrackLikeCounts((prev) => ({
+      ...prev,
+      [trackFile]: (prev[trackFile] ?? 0) + 1,
+    }));
+
+    try {
+      const response = await fetch('/api/music-likes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ track: trackFile }),
+      });
+      if (!response.ok) throw new Error('like failed');
+
+      const data: { track?: string; count?: number; liked?: boolean } = await response.json();
+      if (data.track === trackFile) {
+        setTrackLikeCounts((prev) => ({
+          ...prev,
+          [trackFile]: typeof data.count === 'number' ? data.count : prev[trackFile] ?? 0,
+        }));
+        setLikedTracks((prev) => ({ ...prev, [trackFile]: Boolean(data.liked) }));
+      }
+    } catch {
+      // Revert optimistic update if request fails.
+      setLikedTracks((prev) => ({ ...prev, [trackFile]: false }));
+      setTrackLikeCounts((prev) => ({
+        ...prev,
+        [trackFile]: Math.max(0, (prev[trackFile] ?? 1) - 1),
+      }));
+    } finally {
+      setLikePendingTrackFile((prev) => (prev === trackFile ? null : prev));
+    }
+  };
 
   useEffect(() => {
     if (!isPlaying) {
@@ -914,7 +998,27 @@ export default function Home() {
                   </span>
                 ) : null}
               </p>
-              <p className="text-[10px] text-black">{currentTrack.artist}</p>
+              <div className="flex items-center justify-center gap-2">
+                <p className="text-[10px] text-black">{currentTrack.artist}</p>
+                <button
+                  type="button"
+                  onClick={likeCurrentTrack}
+                  disabled={currentTrackLiked || likePendingTrackFile === currentTrack.file}
+                  aria-label={
+                    currentTrackLiked
+                      ? `Liked ${currentTrack.title}`
+                      : `Like ${currentTrack.title}`
+                  }
+                  className="inline-flex cursor-pointer items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] text-slate-500 transition-colors hover:text-rose-500 disabled:cursor-not-allowed disabled:opacity-85"
+                >
+                  <Heart
+                    className={`h-3.5 w-3.5 ${currentTrackLiked ? 'fill-rose-500 text-rose-500' : ''}`}
+                    strokeWidth={1.9}
+                    aria-hidden
+                  />
+                  <span>{currentTrackLikeCount.toLocaleString()}</span>
+                </button>
+              </div>
             </div>
 
           </div>
@@ -1080,7 +1184,27 @@ export default function Home() {
                         </span>
                       ) : null}
                     </p>
-                    <p className="text-[10px] text-black">{currentTrack.artist}</p>
+                    <div className="flex items-center justify-center gap-2">
+                      <p className="text-[10px] text-black">{currentTrack.artist}</p>
+                      <button
+                        type="button"
+                        onClick={likeCurrentTrack}
+                        disabled={currentTrackLiked || likePendingTrackFile === currentTrack.file}
+                        aria-label={
+                          currentTrackLiked
+                            ? `Liked ${currentTrack.title}`
+                            : `Like ${currentTrack.title}`
+                        }
+                        className="inline-flex cursor-pointer items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] text-slate-500 transition-colors hover:text-rose-500 disabled:cursor-not-allowed disabled:opacity-85"
+                      >
+                        <Heart
+                          className={`h-3.5 w-3.5 ${currentTrackLiked ? 'fill-rose-500 text-rose-500' : ''}`}
+                          strokeWidth={1.9}
+                          aria-hidden
+                        />
+                        <span>{currentTrackLikeCount.toLocaleString()}</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1356,7 +1480,8 @@ export default function Home() {
           </div>
         </main>
       </div>
-      <audio ref={audioRef} preload="metadata" />
+      <audio ref={audioRef} preload="auto" />
+      <audio ref={preloadAudioRef} preload="auto" aria-hidden className="hidden" />
 
       {/* Sticker Carousel - Full Width */}
       <div className="w-full bg-background py-3 sm:py-4">

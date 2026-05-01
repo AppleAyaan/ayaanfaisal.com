@@ -6,6 +6,11 @@ export interface MusicTrack {
   explicit?: boolean;
 }
 
+export interface ResolvedMusicTrack extends MusicTrack {
+  src: string;
+  artSrc: string;
+}
+
 /* add music here! 
   { file: 'fileName.mp3',
     title: 'title',
@@ -14,7 +19,7 @@ export interface MusicTrack {
     explicit: true, (or leave blank if not explicit)
   },
 */
-const rawMusicTracks: MusicTrack[] = [
+export const rawMusicTracks: MusicTrack[] = [
   { file: 'NOKIA - drake.mp3',
     title: 'NOKIA',
     artist: 'Drake',
@@ -46,7 +51,7 @@ const rawMusicTracks: MusicTrack[] = [
     explicit: true,
   },
   {
-    file: 'dil dil pakistan - junaid jamshed.mp3',
+    file: 'dil dil pakistan - junaid jamshed.m4a',
     title: 'Dil Dil Pakistan',
     artist: 'Junaid Jamshed',
     artFile: 'dil dil pakistan.webp',
@@ -79,8 +84,14 @@ const rawMusicTracks: MusicTrack[] = [
   },
 ];
 
-export const musicTracks = rawMusicTracks.map((track) => ({
+export const musicTracks: ResolvedMusicTrack[] = rawMusicTracks.map((track) => ({
   ...track,
   src: `/audio/${encodeURIComponent(track.file)}`,
   artSrc: `/album-art/${encodeURIComponent(track.artFile)}`,
 }));
+
+const trackFileSet = new Set(rawMusicTracks.map((track) => track.file));
+
+export function isKnownTrackFile(file: string) {
+  return trackFileSet.has(file);
+}
