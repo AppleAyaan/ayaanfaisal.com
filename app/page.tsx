@@ -1117,6 +1117,15 @@ export default function Home() {
               }}
             >
               <HoverName />
+              <div className="mt-1 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground/65 sm:text-xs lg:hidden">
+                <img
+                  src="/images/arrow.svg"
+                  alt=""
+                  aria-hidden
+                  className="h-3.5 w-3.5 -rotate-90 opacity-70"
+                />
+                <span className="tracking-wide">click me</span>
+              </div>
             </motion.div>
 
             {/* Bio section */}
