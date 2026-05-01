@@ -697,7 +697,7 @@ const CarouselSticker = memo(function CarouselSticker({
             'drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(0 8px 12px rgba(0,0,0,0.3))',
         }}
       />
-      <p className="pointer-events-none absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap text-[11px] text-muted-foreground/70 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+      <p className="pointer-events-none absolute left-1/2 top-full mt-1 -translate-x-1/2 whitespace-nowrap text-[11px] text-muted-foreground/70 opacity-100 transition-opacity duration-200 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100">
         {sticker.description}
       </p>
     </div>
