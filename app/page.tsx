@@ -5,6 +5,7 @@ import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Script from 'next/script';
 import StickerCarousel from '@/components/sticker-carousel';
 import HoverName from '@/components/hover-name';
 
@@ -691,6 +692,31 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <Script
+        id="person-jsonld"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Person',
+            name: 'Ayaan Faisal',
+            url: 'https://ayaanfaisal.com',
+            sameAs: [
+              'https://github.com/appleayaan',
+              'https://www.linkedin.com/in/ayaanfaisal18/',
+              'https://x.com/ayaanyyz',
+              'https://www.instagram.com/ayaan.visuals/',
+            ],
+            jobTitle: 'Undergraduate Math/CS Student',
+            alumniOf: {
+              '@type': 'CollegeOrUniversity',
+              name: 'University of Waterloo',
+            },
+            description:
+              'Undergraduate Math/CS student at the University of Waterloo seeking co-op opportunities.',
+          }),
+        }}
+      />
       {/* Main Content Container */}
       <div className="flex flex-1">
         {/* Left Sidebar - Sticky */}
