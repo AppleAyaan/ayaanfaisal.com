@@ -93,13 +93,57 @@ const STICKER_DATA: Omit<Sticker, 'rotation'>[] = [
     src: '/stickers/uae.svg',
     alt: 'UAE sticker',
   },
+  {
+    id: 9,
+    label: 'valentino',
+    description: 'favorite perfume',
+    src: '/stickers/valentino.png',
+    alt: 'Valentino perfume sticker',
+  },
+  {
+    id: 10,
+    label: 'airforces',
+    description: 'my daily shoes',
+    src: '/stickers/airforces.png',
+    alt: 'Air Forces sticker',
+  },
+  {
+    id: 11,
+    label: 'tesla model s plaid',
+    description: 'my dream car',
+    src: '/stickers/teslamodelsplaid.png',
+    alt: 'Tesla Model S Plaid sticker',
+  },
+  {
+    id: 12,
+    label: 'toronto raptors',
+    description: 'my fav NBA team',
+    src: '/stickers/torontoraptors.png',
+    alt: 'Toronto Raptors sticker',
+  },
 ];
 
 const STICKERS: Sticker[] = STICKER_DATA.map((s, idx) => ({
   ...s,
   rotation: ((idx * 7) % 11) - 5,
 }));
-const INITIAL_STICKER_ORDER = [0, 1, 2, 3, 4, 8, 5, 6, 7];
+
+/** Visible belt order on load (left → right). UAE stays mid-strip; new ids appended after Pakistan. */
+const PREFERRED_INITIAL_ORDER = [
+  0, 1, 2, 3, 4, 8, 5, 6, 7, 9, 10, 11, 12,
+];
+
+const INITIAL_STICKER_ORDER: number[] = (() => {
+  const idSet = new Set(STICKERS.map((s) => s.id));
+  const ordered: number[] = [];
+  for (const id of PREFERRED_INITIAL_ORDER) {
+    if (idSet.has(id)) ordered.push(id);
+  }
+  for (const s of STICKERS) {
+    if (!ordered.includes(s.id)) ordered.push(s.id);
+  }
+  return ordered;
+})();
 
 const STICKER_BY_ID = new Map(STICKERS.map((s) => [s.id, s] as const));
 const stickerById = (id: number) => STICKER_BY_ID.get(id);
