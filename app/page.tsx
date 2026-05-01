@@ -149,6 +149,7 @@ function toTitleCase(value: string) {
 export default function Home() {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [visitorCount, setVisitorCount] = useState<number | null>(null);
   const [hoveredTag, setHoveredTag] = useState<string | null>(null);
   const [tagGifKeys, setTagGifKeys] = useState<Record<string, number>>({});
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -277,6 +278,39 @@ export default function Home() {
       }
     };
   }, [isPlaying]);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const updateVisitorCount = async () => {
+      try {
+        const sessionKey = 'ayaanfaisal-visitor-hit-v1';
+        const hasIncrementedThisSession = window.sessionStorage.getItem(sessionKey) === '1';
+        const endpoint = hasIncrementedThisSession
+          ? 'https://api.countapi.xyz/get/ayaanfaisal.com/total-visitors'
+          : 'https://api.countapi.xyz/hit/ayaanfaisal.com/total-visitors';
+
+        const response = await fetch(endpoint);
+        if (!response.ok) return;
+
+        const data: { value?: number } = await response.json();
+        if (!isCancelled && typeof data.value === 'number') {
+          setVisitorCount(data.value);
+          if (!hasIncrementedThisSession) {
+            window.sessionStorage.setItem(sessionKey, '1');
+          }
+        }
+      } catch {
+        // Keep UI quiet if counter API is unavailable.
+      }
+    };
+
+    updateVisitorCount();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
 
   const togglePlay = () => {
     const audio = audioRef.current;
@@ -809,21 +843,26 @@ export default function Home() {
               />
             </div>
 
-            {/* Social Icons - Horizontal */}
-            <div className="flex gap-4 items-center ml-auto pr-0">
-              {socials.map((social, idx) => {
-                const Icon = social.icon;
-                return (
-                  <a
-                    key={idx}
-                    href={social.href}
-                    aria-label={social.label}
-                    className="text-black hover:text-neutral-700 transition-colors duration-300"
-                  >
-                    <Icon size={18} />
-                  </a>
-                );
-              })}
+            {/* Social Icons + Visitors */}
+            <div className="ml-auto pr-0 flex flex-col items-end gap-1.5">
+              <div className="flex gap-4 items-center">
+                {socials.map((social, idx) => {
+                  const Icon = social.icon;
+                  return (
+                    <a
+                      key={idx}
+                      href={social.href}
+                      aria-label={social.label}
+                      className="text-black hover:text-neutral-700 transition-colors duration-300"
+                    >
+                      <Icon size={18} />
+                    </a>
+                  );
+                })}
+              </div>
+              <p className="text-[10px] text-slate-500/90 font-light tracking-wide">
+                visitors {visitorCount === null ? '...' : visitorCount.toLocaleString()}
+              </p>
             </div>
           </motion.div>
 
