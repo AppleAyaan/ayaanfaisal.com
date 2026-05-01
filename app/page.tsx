@@ -1,6 +1,6 @@
 'use client';
 
-import { Github, Linkedin, Mail, Instagram, SkipBack, SkipForward } from 'lucide-react';
+import { Github, Linkedin, Mail, Instagram, SkipBack, SkipForward, Menu, X as MenuX } from 'lucide-react';
 import { useState, useEffect, useRef, type ReactNode } from 'react';
 import { motion, useMotionValue, useTransform, useReducedMotion } from 'framer-motion';
 import Link from 'next/link';
@@ -170,6 +170,7 @@ function toTitleCase(value: string) {
 
 export default function Home() {
   const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [lifetimeVisits, setLifetimeVisits] = useState<number | null>(null);
   const [hoveredTag, setHoveredTag] = useState<string | null>(null);
   const [tagGifKeys, setTagGifKeys] = useState<Record<string, number>>({});
@@ -864,7 +865,6 @@ export default function Home() {
               <p className="text-[10px] text-black">{currentTrack.artist}</p>
             </div>
 
-            <audio ref={audioRef} preload="metadata" />
           </div>
         </aside>
 
@@ -881,6 +881,15 @@ export default function Home() {
               ease: 'easeOut',
             }}
           >
+            <button
+              type="button"
+              className="lg:hidden mr-3 inline-flex h-10 w-10 items-center justify-center rounded-md border border-border/50 bg-background/85 text-foreground transition-colors hover:bg-muted"
+              onClick={() => setMobileMenuOpen((prev) => !prev)}
+              aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobileMenuOpen}
+            >
+              {mobileMenuOpen ? <MenuX className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
             {/* Logo Badge */}
             <div className="w-12 h-12 overflow-hidden rounded-full flex-shrink-0">
               <img
@@ -913,6 +922,115 @@ export default function Home() {
               </p>
             </div>
           </motion.div>
+
+          {/* Mobile Nav + Music */}
+          {mobileMenuOpen && (
+            <div className="lg:hidden px-4 sm:px-6 pb-5">
+              <div className="rounded-xl border border-border/50 bg-background/95 p-4 space-y-5">
+                <nav className="flex flex-col gap-3 text-sm">
+                  <Link
+                    href="/"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`font-light transition-colors ${pathname === '/' ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+                  >
+                    me
+                  </Link>
+                  <Link
+                    href="/experience"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`font-light transition-colors ${pathname === '/experience' ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+                  >
+                    experience
+                  </Link>
+                  <Link
+                    href="/projects"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`font-light transition-colors ${pathname === '/projects' ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+                  >
+                    projects
+                  </Link>
+                  <Link
+                    href="https://www.instagram.com/ayaan.visuals/"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="font-light text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    @ayaan.visuals
+                  </Link>
+                </nav>
+
+                <div className="pt-1 border-t border-border/40">
+                  <div className="flex items-center justify-center gap-4">
+                    <button
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-md text-black hover:bg-muted transition-colors"
+                      aria-label="Previous track"
+                      onClick={previousTrack}
+                    >
+                      <SkipBack size={16} />
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={togglePlay}
+                      className="w-16 h-16 rounded-full bg-secondary shadow-md flex items-center justify-center hover:bg-muted transition-colors"
+                      aria-label={isPlaying ? 'Pause track' : 'Play track'}
+                    >
+                      <motion.div
+                        style={{ rotate: `${recordRotation}deg` }}
+                        className="relative w-[60px] h-[60px] rounded-full overflow-hidden border border-black/20 shadow-[inset_0_0_10px_rgba(0,0,0,0.2)] bg-black"
+                      >
+                        <img
+                          src={currentTrack.artSrc}
+                          alt={`${currentTrack.title} album art`}
+                          className="absolute inset-0 h-full w-full object-cover"
+                        />
+                        <div
+                          className="absolute inset-0 rounded-full pointer-events-none opacity-30"
+                          style={{
+                            backgroundImage:
+                              'repeating-radial-gradient(circle at center, rgba(255,255,255,0.18) 0 1px, rgba(0,0,0,0) 1px 7px)',
+                          }}
+                        />
+                        <div
+                          className="absolute inset-0 rounded-full pointer-events-none"
+                          style={{
+                            background:
+                              'radial-gradient(circle at 30% 25%, rgba(255,255,255,0.22), rgba(255,255,255,0) 38%), radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 52%, rgba(0,0,0,0.22) 78%, rgba(0,0,0,0.45) 100%)',
+                          }}
+                        />
+                        <div className="absolute inset-0 rounded-full ring-1 ring-black/20 pointer-events-none" />
+                        <div className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#f5f5f5] border border-black/20 shadow-[0_0_0_1px_rgba(255,255,255,0.35)]" />
+                      </motion.div>
+                    </button>
+
+                    <button
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-md text-black hover:bg-muted transition-colors"
+                      aria-label="Next track"
+                      onClick={nextTrack}
+                    >
+                      <SkipForward size={16} />
+                    </button>
+                  </div>
+
+                  <div className="mt-2 text-center space-y-0.5">
+                    <p className="text-xs font-medium text-foreground inline-flex items-center gap-1">
+                      <span className="mr-1">♪</span>
+                      {currentTrack.title}
+                      {currentTrack.explicit ? (
+                        <span
+                          className="inline-flex h-4 min-w-4 items-center justify-center rounded bg-black/80 px-1 text-[9px] font-semibold leading-none text-white"
+                          aria-label="Explicit"
+                          title="Explicit"
+                        >
+                          E
+                        </span>
+                      ) : null}
+                    </p>
+                    <p className="text-[10px] text-black">{currentTrack.artist}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Hero and Content */}
           <div className="px-4 sm:px-6 lg:px-12 pb-24 sm:pb-32">
@@ -1174,6 +1292,7 @@ export default function Home() {
           </div>
         </main>
       </div>
+      <audio ref={audioRef} preload="metadata" />
 
       {/* Sticker Carousel - Full Width */}
       <StickerCarousel />
