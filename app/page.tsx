@@ -940,7 +940,7 @@ export default function Home() {
         <main className="flex-1">
           {/* Top Bar with Logo Badge and Social Icons */}
           <motion.div
-            className="px-4 sm:px-6 lg:px-12 py-5 sm:py-6 flex items-center w-full"
+            className="px-4 sm:px-6 lg:px-12 py-5 sm:py-6 flex items-start sm:items-center w-full"
             initial="hidden"
             animate="visible"
             variants={revealVariants}
@@ -969,7 +969,7 @@ export default function Home() {
 
             {/* Social Icons + Visitors */}
             <div className="ml-auto pr-0 flex flex-col items-end gap-1.5">
-              <div className="flex gap-3 sm:gap-4 items-center">
+              <div className="flex flex-nowrap gap-2.5 sm:gap-4 items-center">
                 {socials.map((social, idx) => {
                   const Icon = social.icon;
                   return (
@@ -979,9 +979,9 @@ export default function Home() {
                       target="_blank"
                       rel="noreferrer noopener"
                       aria-label={social.label}
-                      className="text-black hover:text-neutral-700 transition-colors duration-300 inline-flex h-11 w-11 items-center justify-center rounded-full active:bg-muted/60 sm:h-auto sm:w-auto sm:rounded-none sm:active:bg-transparent"
+                      className="text-black hover:text-neutral-700 transition-colors duration-300 inline-flex h-9 w-9 items-center justify-center rounded-full active:bg-muted/60 sm:h-auto sm:w-auto sm:rounded-none sm:active:bg-transparent"
                     >
-                      <Icon className="h-[21px] w-[21px] sm:h-[18px] sm:w-[18px]" strokeWidth={1.85} aria-hidden />
+                      <Icon className="h-[18px] w-[18px] sm:h-[18px] sm:w-[18px]" strokeWidth={1.85} aria-hidden />
                     </a>
                   );
                 })}
