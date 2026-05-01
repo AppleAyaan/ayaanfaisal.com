@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     url: 'https://ayaanfaisal.com',
-    title: 'Ayaan Faisal - Waterloo Math/CS Student',
+    title: 'Ayaan Faisal | you can just build things...',
     description:
       'Personal portfolio of Ayaan Faisal, an undergraduate Math/CS student at the University of Waterloo seeking co-op opportunities.',
     siteName: 'Ayaan Faisal',
@@ -34,14 +34,19 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary',
-    title: 'Ayaan Faisal - Waterloo Math/CS Student',
+    title: 'Ayaan Faisal | you can just build things...',
     description:
       'Personal portfolio of Ayaan Faisal, an undergraduate Math/CS student at the University of Waterloo seeking co-op opportunities.',
     images: ['/images/logo-tab.png'],
   },
   icons: {
-    icon: '/images/logo-tab.png',
-    apple: '/images/logo.png',
+    icon: [
+      { url: '/images/logo-tab.png', type: 'image/png' },
+      { url: '/images/logo-tab.png', sizes: '32x32', type: 'image/png' },
+      { url: '/images/logo-tab.png', sizes: '192x192', type: 'image/png' },
+    ],
+    shortcut: '/images/logo-tab.png',
+    apple: '/images/logo-tab.png',
   },
   robots: {
     index: true,

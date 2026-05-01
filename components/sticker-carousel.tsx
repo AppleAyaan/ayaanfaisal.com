@@ -156,6 +156,8 @@ export default function StickerCarousel() {
   const isOverCarouselRef = useRef(false);
   const insertionIndexRef = useRef<number | null>(null);
   const stickerOrderRef = useRef<number[]>(stickerOrder);
+  const lastPointerClientYRef = useRef<number | null>(null);
+  const autoScrollFrameRef = useRef<number | null>(null);
   // Latest position of the active drag in PAGE coords — written by
   // pointermove, read on pointerup to commit the final resting place.
   const activeDragPosRef = useRef({ x: 0, y: 0 });
@@ -241,9 +243,41 @@ export default function StickerCarousel() {
   useEffect(() => {
     if (!isDragging) return;
 
+    const stepAutoScroll = () => {
+      autoScrollFrameRef.current = window.requestAnimationFrame(stepAutoScroll);
+
+      const clientY = lastPointerClientYRef.current;
+      if (clientY === null) return;
+
+      const edgeThreshold = 72;
+      const maxSpeed = 16;
+      let scrollDeltaY = 0;
+      if (clientY < edgeThreshold) {
+        const intensity = (edgeThreshold - clientY) / edgeThreshold;
+        scrollDeltaY = -Math.max(1, Math.round(maxSpeed * intensity));
+      } else if (clientY > window.innerHeight - edgeThreshold) {
+        const intensity =
+          (clientY - (window.innerHeight - edgeThreshold)) / edgeThreshold;
+        scrollDeltaY = Math.max(1, Math.round(maxSpeed * intensity));
+      }
+
+      if (scrollDeltaY === 0) return;
+
+      const beforeScrollY = window.scrollY;
+      window.scrollBy({ top: scrollDeltaY, left: 0, behavior: 'auto' });
+      const actualDeltaY = window.scrollY - beforeScrollY;
+      if (actualDeltaY !== 0) {
+        const nextY = activeDragY.get() + actualDeltaY;
+        activeDragY.set(nextY);
+        activeDragPosRef.current.y = nextY;
+      }
+    };
+    autoScrollFrameRef.current = window.requestAnimationFrame(stepAutoScroll);
+
     const handlePointerMove = (e: PointerEvent) => {
       const id = activeDragIdRef.current;
       if (id === null) return;
+      lastPointerClientYRef.current = e.clientY;
       const offset = dragOffsetRef.current;
       // Sticker top-left in viewport coords (used for hit-testing)
       const stickerViewportX = e.clientX - offset.x;
@@ -362,6 +396,7 @@ export default function StickerCarousel() {
       }
       setIsHoveringCarousel(cursorStillOverCarousel);
 
+      lastPointerClientYRef.current = null;
       setActiveDragId(null);
       setIsOverCarousel(false);
       setInsertionIndex(null);
@@ -371,6 +406,11 @@ export default function StickerCarousel() {
     document.addEventListener('pointerup', handlePointerUp);
     document.addEventListener('pointercancel', handlePointerUp);
     return () => {
+      if (autoScrollFrameRef.current !== null) {
+        window.cancelAnimationFrame(autoScrollFrameRef.current);
+        autoScrollFrameRef.current = null;
+      }
+      lastPointerClientYRef.current = null;
       document.removeEventListener('pointermove', handlePointerMove);
       document.removeEventListener('pointerup', handlePointerUp);
       document.removeEventListener('pointercancel', handlePointerUp);
