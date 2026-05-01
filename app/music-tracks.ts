@@ -42,7 +42,6 @@ export const rawMusicTracks: MusicTrack[] = [
     title: 'What Did I Miss',
     artist: 'Drake',
     artFile: 'what did i miss.png',
-    explicit: true,
   },
   { file: 'come thru - drake.mp3',
     title: 'Come Thru',
