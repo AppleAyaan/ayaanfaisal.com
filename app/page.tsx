@@ -180,6 +180,7 @@ export default function Home() {
   const [recordRotation, setRecordRotation] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const mainContentRef = useRef<HTMLDivElement | null>(null);
+  const webringContainerRef = useRef<HTMLDivElement | null>(null);
   const rotationRef = useRef(0);
   const rotationFrameRef = useRef<number | null>(null);
   // Parallax for the GIF popup driven by motion values — these write
@@ -233,6 +234,25 @@ export default function Home() {
       cancelAnimationFrame(rafId);
     };
   }, [hoveredTag, mouseX, delayedMouseX]);
+
+  useEffect(() => {
+    const container = webringContainerRef.current;
+    if (!container) return;
+
+    container.replaceChildren();
+    const script = document.createElement('script');
+    script.src = 'https://uwaterloo.network/embed.js';
+    script.setAttribute('data-webring', '');
+    script.setAttribute('data-user', 'ayaan-faisal');
+    script.setAttribute('data-color', 'custom');
+    script.setAttribute('data-custom-color', '#36c1e1');
+    script.async = true;
+    container.appendChild(script);
+
+    return () => {
+      container.replaceChildren();
+    };
+  }, []);
 
   const socials = [
     { icon: Github, href: 'https://github.com/appleayaan', label: 'GitHub' },
@@ -1351,10 +1371,7 @@ export default function Home() {
               height={44}
               className="h-10 w-10 shrink-0 overflow-hidden rounded-md object-cover shadow-sm ring-1 ring-black/10 sm:h-11 sm:w-11 lg:h-12 lg:w-12"
             />
-            <div
-              className="h-10 w-10 shrink-0 rounded-md bg-[#cfeefe] shadow-sm ring-1 ring-black/10 transition-colors duration-300 hover:bg-[#b9e6fb] sm:h-11 sm:w-11 lg:h-12 lg:w-12"
-              aria-hidden
-            />
+            <div ref={webringContainerRef} className="shrink-0 self-center origin-center scale-70" />
           </div>
 
           <div className="mt-4 w-full min-w-0 px-1 text-center">
