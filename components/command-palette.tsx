@@ -1,5 +1,11 @@
 'use client';
 
+/**
+ * Global command palette behavior + command registry.
+ * Edit here to add/remove shortcuts, navigation commands, and music quick actions.
+ * This component dispatches command events consumed by app/page.tsx.
+ */
+
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';

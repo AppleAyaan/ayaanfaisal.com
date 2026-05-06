@@ -1,5 +1,10 @@
 'use client';
 
+/**
+ * Name lockup hover interaction (English <-> Urdu reveal animation).
+ * Edit here for hover timing, reveal direction, and coarse-pointer behavior.
+ */
+
 import { useEffect, useState } from 'react';
 
 export default function HoverName() {

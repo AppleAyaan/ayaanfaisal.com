@@ -1,5 +1,14 @@
 'use client';
 
+/**
+ * Home page composition + interaction hub.
+ * Edit here for: sidebar/nav links, music player UX, tag hover popups, sections/content layout.
+ * Related files:
+ * - app/music-tracks.ts (playlist data)
+ * - components/sticker-carousel.tsx (sticker strip behavior)
+ * - components/hover-name.tsx (name hover animation)
+ */
+
 import { Github, Linkedin, Mail, Instagram, SkipBack, SkipForward, Menu, X as MenuX, Heart, Sun, MoonStar } from 'lucide-react';
 import { Fragment, useState, useEffect, useRef, useCallback, type ReactNode } from 'react';
 import { motion, useMotionValue, useTransform, useReducedMotion } from 'framer-motion';
@@ -179,7 +188,6 @@ export default function Home() {
   const [isDesktopSidebarReleased, setIsDesktopSidebarReleased] = useState(false);
   const [lifetimeVisits, setLifetimeVisits] = useState<number | null>(null);
   const [hoveredTag, setHoveredTag] = useState<string | null>(null);
-  const [tagGifKeys, setTagGifKeys] = useState<Record<string, number>>({});
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [recordRotation, setRecordRotation] = useState(0);
@@ -646,6 +654,63 @@ export default function Home() {
     'Claude Code': 'https://www.claude.ai/',
   };
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const tagMediaToPreload = [
+      { src: '/tag-gifs/tbd.gif', type: 'image' as const },
+      { src: '/tag-gifs/watsmygpa.gif', type: 'image' as const },
+      { src: '/tag-gifs/velocity.gif', type: 'image' as const },
+      { src: '/tag-gifs/halohalo.webm', type: 'video' as const },
+      { src: '/tag-gifs/ayaan.visuals.gif', type: 'image' as const },
+      { src: '/tag-gifs/X.gif', type: 'image' as const },
+      { src: '/tag-gifs/linkedin.gif', type: 'image' as const },
+      { src: '/tag-gifs/uwaterloo.gif', type: 'image' as const },
+      { src: '/tag-gifs/uwaterloo.png', type: 'image' as const },
+      { src: '/tag-gifs/claude.webm', type: 'video' as const },
+    ];
+
+    const preloadAllTagMedia = () => {
+      for (const media of tagMediaToPreload) {
+        if (media.type === 'image') {
+          const img = new Image();
+          img.decoding = 'async';
+          img.src = media.src;
+        } else {
+          const video = document.createElement('video');
+          video.preload = 'metadata';
+          video.muted = true;
+          video.playsInline = true;
+          video.src = media.src;
+          video.load();
+        }
+      }
+    };
+
+    const schedulePreload = () => {
+      if ('requestIdleCallback' in window) {
+        (
+          window as Window & {
+            requestIdleCallback: (
+              callback: IdleRequestCallback,
+              options?: IdleRequestOptions
+            ) => number;
+          }
+        ).requestIdleCallback(() => preloadAllTagMedia(), { timeout: 2500 });
+      } else {
+        setTimeout(preloadAllTagMedia, 1200);
+      }
+    };
+
+    if (document.readyState === 'complete') {
+      schedulePreload();
+      return;
+    }
+
+    window.addEventListener('load', schedulePreload, { once: true });
+    return () => window.removeEventListener('load', schedulePreload);
+  }, []);
+
   const experiences = [
     {
       title: 'incoming',
@@ -812,7 +877,6 @@ export default function Home() {
       const uniqueId = `tag-${expIndex}-${itemIndex}`;
       const color = tagColors[item.tagIdx % tagColors.length];
       const isHovered = hoveredTag === uniqueId;
-      const gifVersion = tagGifKeys[uniqueId] ?? 0;
       const normalizedTagText = item.text.replace(/[.,!?]+$/, '');
       const tagHref =
         tagLinks[normalizedTagText] ??
@@ -831,10 +895,6 @@ export default function Home() {
               const rect = e.currentTarget.getBoundingClientRect();
               hoveredTagCenterRef.current = rect.left + rect.width / 2;
               setHoveredTag(uniqueId);
-              setTagGifKeys((prev) => ({
-                ...prev,
-                [uniqueId]: (prev[uniqueId] ?? 0) + 1,
-              }));
             }}
             onMouseLeave={() => {
               setHoveredTag(null);
@@ -899,29 +959,25 @@ export default function Home() {
               `}</style>
               {item.text === 'TBD' ? (
                 <img
-                  key={gifVersion}
-                  src={`/tag-gifs/tbd.gif?v=${gifVersion}`}
+                  src="/tag-gifs/tbd.gif"
                   alt="tbd popup gif"
                   className="w-full h-full object-cover object-[center_70%] block"
                 />
               ) : item.text === 'WATSMyGPA' ? (
                 <img
-                  key={gifVersion}
-                  src={`/tag-gifs/watsmygpa.gif?v=${gifVersion}`}
+                  src="/tag-gifs/watsmygpa.gif"
                   alt="wats my gpa popup gif"
                   className="w-full h-full object-cover block"
                 />
               ) : item.text === 'Velocity' ? (
                 <img
-                  key={gifVersion}
-                  src={`/tag-gifs/velocity.gif?v=${gifVersion}`}
+                  src="/tag-gifs/velocity.gif"
                   alt="velocity popup gif"
                   className="w-full h-full object-cover block"
                 />
               ) : item.text === '@Halo Halo' ? (
                 <video
-                  key={gifVersion}
-                  src={`/tag-gifs/halohalo.webm?v=${gifVersion}`}
+                  src="/tag-gifs/halohalo.webm"
                   className="w-full h-full object-cover block"
                   autoPlay
                   loop
@@ -930,36 +986,31 @@ export default function Home() {
                 />
               ) : item.text === '@ayaan.visuals' ? (
                 <img
-                  key={gifVersion}
-                  src={`/tag-gifs/ayaan.visuals.gif?v=${gifVersion}`}
+                  src="/tag-gifs/ayaan.visuals.gif"
                   alt="ayaan visuals popup gif"
                   className="w-full h-full object-cover block"
                 />
               ) : item.text === 'X' ? (
                 <img
-                  key={gifVersion}
-                  src={`/tag-gifs/X.gif?v=${gifVersion}`}
+                  src="/tag-gifs/X.gif"
                   alt="x popup gif"
                   className="w-full h-full object-cover block"
                 />
               ) : typeof item.text === 'string' && item.text.replace(/[.,!?]+$/, '') === 'LinkedIn' ? (
                 <img
-                  key={gifVersion}
-                  src={`/tag-gifs/linkedin.gif?v=${gifVersion}`}
+                  src="/tag-gifs/linkedin.gif"
                   alt="linkedin popup gif"
                   className="w-full h-full object-cover block"
                 />
               ) : item.text === '@University' ? (
                 <img
-                  key={gifVersion}
                   src="/tag-gifs/uwaterloo.png"
                   alt="uwaterloo popup gif"
                   className="w-full h-full object-cover block"
                 />
               ) : item.text === 'Claude Code' ? (
                 <video
-                  key={gifVersion}
-                  src={`/tag-gifs/claude.webm?v=${gifVersion}`}
+                  src="/tag-gifs/claude.webm"
                   className="w-full h-full object-cover block"
                   autoPlay
                   loop
@@ -1452,7 +1503,6 @@ export default function Home() {
                         hoverBg: '#e0c83f',
                       };
                       const isHovered = hoveredTag === 'tag-uwaterloo';
-                      const gifVersion = tagGifKeys.tagUwaterloo ?? 0;
                       return (
                         <>
                           <a
@@ -1461,10 +1511,6 @@ export default function Home() {
                               hoveredTagCenterRef.current =
                                 rect.left + rect.width / 2;
                               setHoveredTag('tag-uwaterloo');
-                              setTagGifKeys((prev) => ({
-                                ...prev,
-                                tagUwaterloo: (prev.tagUwaterloo ?? 0) + 1,
-                              }));
                             }}
                             onMouseLeave={() => {
                               setHoveredTag(null);
@@ -1509,7 +1555,6 @@ export default function Home() {
                                 }
                               `}</style>
                               <img
-                                key={gifVersion}
                                 src="/tag-gifs/uwaterloo.gif"
                                 alt="uwaterloo popup gif"
                                 className="w-full h-full object-cover block"

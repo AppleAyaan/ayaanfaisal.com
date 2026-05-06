@@ -1,3 +1,8 @@
+/**
+ * Source of truth for music player tracks.
+ * Edit rawMusicTracks to add/remove/reorder songs and explicit flags.
+ * `musicTracks` is the resolved runtime list with encoded audio/art URLs.
+ */
 export interface MusicTrack {
   file: string;
   title: string;

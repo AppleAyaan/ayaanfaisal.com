@@ -1,5 +1,11 @@
 'use client';
 
+/**
+ * Sticker belt + drag/drop surface used on the homepage.
+ * Edit STICKER_DATA to change sticker assets/labels/descriptions.
+ * Edit PREFERRED_INITIAL_ORDER to control initial belt ordering.
+ */
+
 import {
   motion,
   useAnimationFrame,
