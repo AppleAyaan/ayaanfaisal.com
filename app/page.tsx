@@ -18,6 +18,7 @@ import { useTheme } from 'next-themes';
 import Script from 'next/script';
 import StickerCarousel from '@/components/sticker-carousel';
 import HoverName from '@/components/hover-name';
+import AutoplayLoopVideo from '@/components/autoplay-loop-video';
 import { musicTracks } from './music-tracks';
 import { applyThemeWithEntranceReplay } from '@/lib/theme-transition';
 import { useThemeEntranceReplay } from '@/components/theme-entrance-replay';
@@ -711,12 +712,14 @@ export default function Home() {
       { src: '/tag-gifs/watsmygpa.gif', type: 'image' as const },
       { src: '/tag-gifs/velocity.gif', type: 'image' as const },
       { src: '/tag-gifs/halohalo.webm', type: 'video' as const },
+      { src: '/tag-gifs/halohalo.mp4', type: 'video' as const },
       { src: '/tag-gifs/ayaan.visuals.gif', type: 'image' as const },
       { src: '/tag-gifs/X.gif', type: 'image' as const },
       { src: '/tag-gifs/linkedin.gif', type: 'image' as const },
       { src: '/tag-gifs/uwaterloo.gif', type: 'image' as const },
       { src: '/tag-gifs/uwaterloo.png', type: 'image' as const },
       { src: '/tag-gifs/claude.webm', type: 'video' as const },
+      { src: '/tag-gifs/claude.mp4', type: 'video' as const },
     ];
 
     const preloadAllTagMedia = () => {
@@ -765,8 +768,10 @@ export default function Home() {
 
     const projectMediaToPreload = [
       { src: '/tag-gifs/ayaanfaisal.com.webm', type: 'video' as const },
+      { src: '/tag-gifs/ayaanfaisal.com.mp4', type: 'video' as const },
       { src: '/tag-gifs/watsmygpa.gif', type: 'image' as const },
       { src: '/tag-gifs/packright.webm', type: 'video' as const },
+      { src: '/tag-gifs/packright.mp4', type: 'video' as const },
     ];
 
     const preloadProjectsMedia = () => {
@@ -1065,13 +1070,9 @@ export default function Home() {
                   className="w-full h-full object-cover block"
                 />
               ) : item.text === '@Halo Halo' ? (
-                <video
-                  src="/tag-gifs/halohalo.webm"
+                <AutoplayLoopVideo
+                  webmSrc="/tag-gifs/halohalo.webm"
                   className="w-full h-full object-cover block"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
                 />
               ) : item.text === '@ayaan.visuals' ? (
                 <img
@@ -1098,13 +1099,9 @@ export default function Home() {
                   className="w-full h-full object-cover block"
                 />
               ) : item.text === 'Claude Code' ? (
-                <video
-                  src="/tag-gifs/claude.webm"
+                <AutoplayLoopVideo
+                  webmSrc="/tag-gifs/claude.webm"
                   className="w-full h-full object-cover block"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-r from-gray-600 to-gray-800 flex items-center justify-center text-white text-xs font-semibold">
@@ -1868,14 +1865,10 @@ export default function Home() {
                         >
                           <div className="aspect-video overflow-hidden rounded-xl bg-secondary/40 shadow-[0_8px_24px_rgba(15,23,42,0.2)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
                             {item.mediaType === 'video' ? (
-                              <video
-                                src={item.mediaSrc}
+                              <AutoplayLoopVideo
+                                webmSrc={item.mediaSrc}
                                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                                 preload="metadata"
-                                autoPlay
-                                loop
-                                muted
-                                playsInline
                               />
                             ) : (
                               <img
@@ -1960,14 +1953,10 @@ export default function Home() {
                         >
                           <div className="aspect-video overflow-hidden rounded-xl bg-secondary/40 shadow-[0_8px_24px_rgba(15,23,42,0.2)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
                             {project.mediaType === 'video' ? (
-                              <video
-                                src={project.gifSrc}
+                              <AutoplayLoopVideo
+                                webmSrc={project.gifSrc}
                                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                                 preload="metadata"
-                                autoPlay
-                                loop
-                                muted
-                                playsInline
                               />
                             ) : (
                               <img
