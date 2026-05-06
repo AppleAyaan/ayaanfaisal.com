@@ -1322,7 +1322,7 @@ export default function Home() {
         {/* Right Column */}
         <main className="relative z-30 flex min-w-0 flex-1 flex-col">
           <Fragment key={`home-entrance-${entranceReplayEpoch}`}>
-          <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-border/35 supports-[backdrop-filter]:bg-background/80 lg:static lg:z-auto lg:bg-transparent lg:backdrop-blur-none lg:border-b-0">
+          <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 lg:static lg:z-auto lg:bg-transparent lg:backdrop-blur-none">
           {/* Top Bar with Logo Badge and Social Icons */}
           <motion.div
             className="flex w-full items-start px-4 py-5 sm:px-6 sm:items-center sm:py-6 lg:px-12 min-w-0"
