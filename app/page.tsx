@@ -1,7 +1,7 @@
 'use client';
 
 import { Github, Linkedin, Mail, Instagram, SkipBack, SkipForward, Menu, X as MenuX, Heart, Sun, MoonStar } from 'lucide-react';
-import { Fragment, useState, useEffect, useRef, type ReactNode } from 'react';
+import { Fragment, useState, useEffect, useRef, useCallback, type ReactNode } from 'react';
 import { motion, useMotionValue, useTransform, useReducedMotion } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -156,6 +156,20 @@ function toTitleCase(value: string) {
     .join(' ');
 }
 
+function buildShuffledTrackPool(total: number, excludeIndex: number) {
+  const indices: number[] = [];
+  for (let i = 0; i < total; i += 1) {
+    if (i !== excludeIndex) indices.push(i);
+  }
+
+  for (let i = indices.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+
+  return indices;
+}
+
 export default function Home() {
   const pathname = usePathname();
   const { resolvedTheme, setTheme } = useTheme();
@@ -172,8 +186,13 @@ export default function Home() {
   const [trackLikeCounts, setTrackLikeCounts] = useState<Record<string, number>>({});
   const [likedTracks, setLikedTracks] = useState<Record<string, boolean>>({});
   const [likePendingTrackFile, setLikePendingTrackFile] = useState<string | null>(null);
+  const [upcomingTrackIndex, setUpcomingTrackIndex] = useState(() =>
+    musicTracks.length > 1 ? 1 : 0
+  );
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const isPlayingRef = useRef(false);
+  const shuffledPoolRef = useRef<number[]>([]);
+  const playedHistoryRef = useRef<number[]>([]);
   const preloadAudioRef = useRef<HTMLAudioElement | null>(null);
   const mainContentRef = useRef<HTMLDivElement | null>(null);
   const webringContainerRef = useRef<HTMLDivElement | null>(null);
@@ -307,10 +326,73 @@ export default function Home() {
   ];
 
   const currentTrack = musicTracks[currentTrackIndex];
-  const upcomingTrack = musicTracks[(currentTrackIndex + 1) % musicTracks.length];
+  const upcomingTrack = musicTracks[upcomingTrackIndex];
   const isDrakeTrack = currentTrack.artist.toLowerCase().includes('drake');
   const currentTrackLikeCount = trackLikeCounts[currentTrack.file] ?? 0;
   const currentTrackLiked = likedTracks[currentTrack.file] ?? false;
+
+  const syncUpcomingTrack = useCallback((currentIndex: number) => {
+    if (musicTracks.length <= 1) {
+      setUpcomingTrackIndex(currentIndex);
+      return;
+    }
+
+    if (shuffledPoolRef.current.length === 0) {
+      shuffledPoolRef.current = buildShuffledTrackPool(musicTracks.length, currentIndex);
+    }
+
+    const nextPreview =
+      shuffledPoolRef.current[shuffledPoolRef.current.length - 1] ?? currentIndex;
+    setUpcomingTrackIndex(nextPreview);
+  }, []);
+
+  const nextTrack = useCallback(() => {
+    setCurrentTrackIndex((prev) => {
+      if (musicTracks.length <= 1) return prev;
+
+      playedHistoryRef.current.push(prev);
+      if (shuffledPoolRef.current.length === 0) {
+        shuffledPoolRef.current = buildShuffledTrackPool(musicTracks.length, prev);
+      }
+
+      const nextIndex = shuffledPoolRef.current.pop() ?? prev;
+      syncUpcomingTrack(nextIndex);
+      return nextIndex;
+    });
+  }, [syncUpcomingTrack]);
+
+  const previousTrack = useCallback(() => {
+    setCurrentTrackIndex((prev) => {
+      const previousIndex = playedHistoryRef.current.pop();
+      if (typeof previousIndex !== 'number') return prev;
+
+      if (musicTracks.length > 1 && previousIndex !== prev) {
+        shuffledPoolRef.current.push(prev);
+      }
+      syncUpcomingTrack(previousIndex);
+      return previousIndex;
+    });
+  }, [syncUpcomingTrack]);
+
+  const setTrackDirectly = useCallback(
+    (trackIndex: number) => {
+      playedHistoryRef.current = [];
+      shuffledPoolRef.current = buildShuffledTrackPool(musicTracks.length, trackIndex);
+      setCurrentTrackIndex(trackIndex);
+      syncUpcomingTrack(trackIndex);
+    },
+    [syncUpcomingTrack]
+  );
+
+  useEffect(() => {
+    syncUpcomingTrack(currentTrackIndex);
+  }, [currentTrackIndex, syncUpcomingTrack]);
+
+  useEffect(() => {
+    if (musicTracks.length <= 1) return;
+    const randomIndex = Math.floor(Math.random() * musicTracks.length);
+    setTrackDirectly(randomIndex);
+  }, [setTrackDirectly]);
 
   useEffect(() => {
     isPlayingRef.current = isPlaying;
@@ -320,7 +402,7 @@ export default function Home() {
     const audio = audioRef.current;
     if (!audio) return;
     const onEnded = () => {
-      setCurrentTrackIndex((prev) => (prev + 1) % musicTracks.length);
+      nextTrack();
       setIsPlaying(true);
     };
 
@@ -329,7 +411,7 @@ export default function Home() {
     return () => {
       audio.removeEventListener('ended', onEnded);
     };
-  }, []);
+  }, [nextTrack]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -497,14 +579,6 @@ export default function Home() {
     audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
   };
 
-  const previousTrack = () => {
-    setCurrentTrackIndex((prev) => (prev - 1 + musicTracks.length) % musicTracks.length);
-  };
-
-  const nextTrack = () => {
-    setCurrentTrackIndex((prev) => (prev + 1) % musicTracks.length);
-  };
-
   useEffect(() => {
     const onToggle = () => {
       const audio = audioRef.current;
@@ -517,10 +591,10 @@ export default function Home() {
       }
     };
     const onNext = () => {
-      setCurrentTrackIndex((prev) => (prev + 1) % musicTracks.length);
+      nextTrack();
     };
     const onPrevious = () => {
-      setCurrentTrackIndex((prev) => (prev - 1 + musicTracks.length) % musicTracks.length);
+      previousTrack();
     };
     const onOvo = () => {
       const drakeIndices = musicTracks
@@ -532,7 +606,7 @@ export default function Home() {
 
       const randomIndex =
         drakeIndices[Math.floor(Math.random() * drakeIndices.length)];
-      setCurrentTrackIndex(randomIndex);
+      setTrackDirectly(randomIndex);
       setIsPlaying(true);
     };
 
@@ -547,7 +621,7 @@ export default function Home() {
       window.removeEventListener('command-music-previous', onPrevious);
       window.removeEventListener('command-music-ovo', onOvo);
     };
-  }, []);
+  }, [nextTrack, previousTrack, setTrackDirectly]);
 
   const tagColors = [
     { bg: '#ffd4d4', hoverBg: '#ff8a8a' }, // TBD
@@ -1663,7 +1737,7 @@ export default function Home() {
               {' '}
               and{' '}
               <a href="https://cursor.com" target="_blank" rel="noreferrer" className="underline-offset-4 hover:text-foreground hover:underline transition-colors">
-                Cursor
+                Cursor.
               </a>
             </p>
           </div>
