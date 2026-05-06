@@ -11,10 +11,13 @@
   My personal portfolio website! 🌐
 </h3>
 
-[![Demo](https://apple.com/)](https://apple.com)
-
-## Features
-- TBD
+<p align="center">
+  <a href="https://www.ayaanfaisal.com">
+    <img src="public/images/ayaanfaisal-readme.gif" alt="Demo" />
+  </a>
+</p>
 
 ## License
 
+© 2026 ayaanfaisal.com  
+All rights reserved. This project is not licensed for reuse or redistribution.
