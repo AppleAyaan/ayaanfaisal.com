@@ -1573,7 +1573,7 @@ export default function Home() {
           <div className="px-4 sm:px-6 lg:px-12 pb-24 sm:pb-32">
             {isHomePage && (
               <motion.div
-                className="-mx-4 -mt-2 mb-3 sm:mx-0 sm:mb-2 lg:-ml-8"
+                className="-mx-4 mb-3 mt-1 scroll-mt-[calc(5.5rem+env(safe-area-inset-top,0px))] sm:mx-0 sm:mt-0 sm:mb-2 lg:-ml-8"
                 initial="hidden"
                 animate="visible"
                 variants={revealVariants}
