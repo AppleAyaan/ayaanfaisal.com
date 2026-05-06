@@ -3,11 +3,11 @@
 /**
  * Global command palette behavior + command registry.
  * Edit here to add/remove shortcuts, navigation commands, and music quick actions.
- * This component dispatches command events consumed by app/page.tsx.
+ * Dispatches window events consumed by app/page.tsx (e.g. command-music-*,
+ * command-main-view for Home / Projects / Experience in-page navigation).
  */
 
 import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
@@ -83,8 +83,13 @@ const X_URL = 'https://x.com/ayaanyyz';
 const INSTAGRAM_URL = 'https://www.instagram.com/ayaan.visuals/';
 const RESUME_PATH = '/resume.pdf';
 
+function dispatchMainView(view: 'home' | 'projects' | 'experience') {
+  window.dispatchEvent(
+    new CustomEvent('command-main-view', { detail: { view } })
+  );
+}
+
 export default function CommandPalette() {
-  const router = useRouter();
   const prefersReducedMotion = useReducedMotion();
   const { resolvedTheme, setTheme } = useTheme();
   const { bumpEntranceAnimations } = useThemeEntranceReplay();
@@ -135,7 +140,7 @@ export default function CommandPalette() {
         icon: Home,
         shortcut: 'G H',
         run: () => {
-          router.push('/');
+          dispatchMainView('home');
           setOpen(false);
         },
       },
@@ -147,7 +152,7 @@ export default function CommandPalette() {
         icon: FolderKanban,
         shortcut: 'G P',
         run: () => {
-          router.push('/projects');
+          dispatchMainView('projects');
           setOpen(false);
         },
       },
@@ -159,7 +164,7 @@ export default function CommandPalette() {
         icon: Briefcase,
         shortcut: 'G E',
         run: () => {
-          router.push('/experience');
+          dispatchMainView('experience');
           setOpen(false);
         },
       },
@@ -318,7 +323,7 @@ export default function CommandPalette() {
         },
       },
     ],
-    [router, setTheme, resolvedTheme, bumpEntranceAnimations]
+    [setTheme, resolvedTheme, bumpEntranceAnimations]
   );
 
   const commandSections: Array<PaletteCommand['section']> = [

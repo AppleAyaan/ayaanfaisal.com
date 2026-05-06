@@ -181,6 +181,16 @@ function buildShuffledTrackPool(total: number, excludeIndex: number) {
 
 export default function Home() {
   const pathname = usePathname();
+  const [mainView, setMainView] = useState<'home' | 'projects' | 'experience'>('home');
+  const [projectsViewEpoch, setProjectsViewEpoch] = useState(0);
+  const [experienceViewEpoch, setExperienceViewEpoch] = useState(0);
+  const isProjectsPage = mainView === 'projects';
+  const isExperiencePage = mainView === 'experience';
+  const isHomePage = mainView === 'home';
+  const [shouldAnimateGlobalTopBar] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    return window.sessionStorage.getItem('ayaan-global-topbar-animated') !== '1';
+  });
   const { resolvedTheme, setTheme } = useTheme();
   const { epoch: entranceReplayEpoch, bumpEntranceAnimations } = useThemeEntranceReplay();
   const [themeMounted, setThemeMounted] = useState(false);
@@ -325,6 +335,17 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!shouldAnimateGlobalTopBar) return;
+    window.sessionStorage.setItem('ayaan-global-topbar-animated', '1');
+  }, [shouldAnimateGlobalTopBar]);
+
+  useEffect(() => {
+    if (pathname !== '/') {
+      setMainView('home');
+    }
+  }, [pathname]);
+
   const socials = [
     { icon: Github, href: 'https://github.com/appleayaan', label: 'GitHub' },
     { icon: Linkedin, href: 'https://www.linkedin.com/in/ayaanfaisal18/', label: 'LinkedIn' },
@@ -338,6 +359,28 @@ export default function Home() {
   const isDrakeTrack = currentTrack.artist.toLowerCase().includes('drake');
   const currentTrackLikeCount = trackLikeCounts[currentTrack.file] ?? 0;
   const currentTrackLiked = likedTracks[currentTrack.file] ?? false;
+
+  const navigateMainView = useCallback((view: 'home' | 'projects' | 'experience') => {
+    if (view === 'projects') {
+      setProjectsViewEpoch((prev) => prev + 1);
+    } else if (view === 'experience') {
+      setExperienceViewEpoch((prev) => prev + 1);
+    }
+    setMainView(view);
+  }, []);
+
+  useEffect(() => {
+    const onMainViewCommand = (event: Event) => {
+      const detail = (
+        event as CustomEvent<{ view: 'home' | 'projects' | 'experience' }>
+      ).detail;
+      if (!detail?.view) return;
+      navigateMainView(detail.view);
+    };
+    window.addEventListener('command-main-view', onMainViewCommand);
+    return () =>
+      window.removeEventListener('command-main-view', onMainViewCommand);
+  }, [navigateMainView]);
 
   const syncUpcomingTrack = useCallback((currentIndex: number) => {
     if (musicTracks.length <= 1) {
@@ -711,6 +754,46 @@ export default function Home() {
     return () => window.removeEventListener('load', schedulePreload);
   }, []);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const projectMediaToPreload = [
+      { src: '/tag-gifs/ayaanfaisal.com.webm', type: 'video' as const },
+      { src: '/tag-gifs/watsmygpa.gif', type: 'image' as const },
+      { src: '/tag-gifs/packright.webm', type: 'video' as const },
+    ];
+
+    const preloadProjectsMedia = () => {
+      for (const media of projectMediaToPreload) {
+        if (media.type === 'image') {
+          const img = new Image();
+          img.decoding = 'async';
+          img.src = media.src;
+        } else {
+          const video = document.createElement('video');
+          video.preload = 'metadata';
+          video.muted = true;
+          video.playsInline = true;
+          video.src = media.src;
+          video.load();
+        }
+      }
+    };
+
+    if ('requestIdleCallback' in window) {
+      (
+        window as Window & {
+          requestIdleCallback: (
+            callback: IdleRequestCallback,
+            options?: IdleRequestOptions
+          ) => number;
+        }
+      ).requestIdleCallback(() => preloadProjectsMedia(), { timeout: 3200 });
+    } else {
+      setTimeout(preloadProjectsMedia, 1400);
+    }
+  }, []);
+
   const experiences = [
     {
       title: 'incoming',
@@ -837,7 +920,7 @@ export default function Home() {
       date: "apr '26",
       description:
         <>
-          an <HandDrawnUnderline delay={0} triggerOnView>interactive and fun portfolio</HandDrawnUnderline> built with Next.js and <HandDrawnUnderline delay={0.45} triggerOnView>Tailwind CSS</HandDrawnUnderline>. check out my projects and updates!
+        an <HandDrawnUnderline delay={0.28} triggerOnView>interactive and fun portfolio</HandDrawnUnderline> built with Next.js and <HandDrawnUnderline delay={0.46} triggerOnView>Tailwind CSS</HandDrawnUnderline>. check out my projects and updates!
      
      
         </>,
@@ -851,7 +934,7 @@ export default function Home() {
       date: "jan '26",
       description:
         <>
-          An <HandDrawnUnderline delay={0.9} triggerOnView>ML-powered</HandDrawnUnderline> platform that predicts GPA trends and provides <HandDrawnUnderline delay={1.2} triggerOnView>anonymized academic</HandDrawnUnderline> performance insights across UW programs.
+        An <HandDrawnUnderline delay={0.34} triggerOnView>ML-powered</HandDrawnUnderline> platform that predicts GPA trends and provides <HandDrawnUnderline delay={0.54} triggerOnView>anonymized academic</HandDrawnUnderline> performance insights across UW programs.
      
         </>,
       url: { href: 'https://watsmygpa.me', target: '_blank', rel: 'noreferrer' },
@@ -863,7 +946,7 @@ export default function Home() {
       date: "oct '25",
       description:
         <>
-          an <HandDrawnUnderline delay={1.05} triggerOnView>iOS packing assistant app</HandDrawnUnderline> designed to help users <HandDrawnUnderline delay={1.35} triggerOnView>reduce trip-prep time by 40%</HandDrawnUnderline>. PackRight is built with SwiftUI and XCode.
+        an <HandDrawnUnderline delay={0.4} triggerOnView>iOS packing assistant app</HandDrawnUnderline> designed to help users <HandDrawnUnderline delay={0.62} triggerOnView>reduce trip-prep time by 40%</HandDrawnUnderline>. PackRight is built with SwiftUI and XCode.
         </>,
       url: { href: 'https://github.com/AppleAyaan/PackRight', target: '_blank', rel: 'noreferrer' },
       gifSrc: '/tag-gifs/packright.webm',
@@ -1081,33 +1164,45 @@ export default function Home() {
           {/* Top Navigation */}
           <div className="flex flex-col gap-12">
             {/* Me */}
-            <Link
-              href="/"
-              className={`text-sm font-light transition-colors text-right block ${pathname === '/' ? 'text-foreground font-semibold scale-[1.03]' : 'text-muted-foreground/50 hover:text-muted-foreground'
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                navigateMainView('home');
+              }}
+              className={`text-sm font-light cursor-pointer text-right block w-full ${isHomePage ? 'text-foreground font-semibold scale-[1.03]' : 'text-muted-foreground/80 hover:text-muted-foreground dark:text-muted-foreground dark:hover:text-foreground'
                 }`}
             >
               me
-            </Link>
+            </button>
 
             {/* Navigation */}
             <nav className="flex flex-col gap-12 text-sm">
-              <Link
-                href="/experience"
-                className={`font-light text-right transition-colors ${pathname === '/experience' ? 'text-foreground font-semibold scale-[1.03]' : 'text-muted-foreground/50 hover:text-muted-foreground'
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigateMainView('experience');
+                }}
+                className={`font-light cursor-pointer text-right transition-colors w-full ${isExperiencePage ? 'text-foreground font-semibold scale-[1.03]' : 'text-muted-foreground/80 hover:text-muted-foreground dark:text-muted-foreground dark:hover:text-foreground'
                   }`}
               >
                 experience
-              </Link>
-              <Link
-                href="/projects"
-                className={`font-light text-right transition-colors ${pathname === '/projects' ? 'text-foreground font-semibold scale-[1.03]' : 'text-muted-foreground/50 hover:text-muted-foreground'
+              </button>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigateMainView('projects');
+                }}
+                className={`font-light cursor-pointer text-right transition-colors w-full ${isProjectsPage ? 'text-foreground font-semibold scale-[1.03]' : 'text-muted-foreground/80 hover:text-muted-foreground dark:text-muted-foreground dark:hover:text-foreground'
                   }`}
               >
                 projects
-              </Link>
+              </button>
               <Link
                 href="https://www.instagram.com/ayaan.visuals/"
-                className={`font-light text-right transition-colors ${pathname === '/ayaan-visuals' ? 'text-foreground font-semibold scale-[1.03]' : 'text-muted-foreground/50 hover:text-muted-foreground'
+                className={`font-light cursor-pointer text-right transition-colors ${pathname === '/ayaan-visuals' ? 'text-foreground font-semibold scale-[1.03]' : 'text-muted-foreground/80 hover:text-muted-foreground dark:text-muted-foreground dark:hover:text-foreground'
                   }`}
               >
                 @ayaan.visuals
@@ -1206,7 +1301,7 @@ export default function Home() {
                   </button>
                 </div>
                 <p
-                  className={`text-[10px] leading-none text-[#b4975a] transition-all duration-300 ease-out motion-reduce:transition-none ${
+                  className={`text-[10px] leading-none text-[#b4975a] transition-all duration-300 ease-out motion-reduce:transition-none dark:text-[#d8b56b] ${
                     isDrakeTrack ? 'translate-y-0 opacity-100' : '-translate-y-1 opacity-0'
                   }`}
                   aria-hidden={!isDrakeTrack}
@@ -1227,11 +1322,11 @@ export default function Home() {
           {/* Top Bar with Logo Badge and Social Icons */}
           <motion.div
             className="px-4 sm:px-6 lg:px-12 py-5 sm:py-6 flex items-start sm:items-center w-full"
-            initial="hidden"
+            initial={shouldAnimateGlobalTopBar ? 'hidden' : 'visible'}
             animate="visible"
             variants={revealVariants}
             transition={{
-              duration: prefersReducedMotion ? 0 : 0.5,
+              duration: prefersReducedMotion || !shouldAnimateGlobalTopBar ? 0 : 0.5,
               ease: 'easeOut',
             }}
           >
@@ -1245,13 +1340,15 @@ export default function Home() {
               {mobileMenuOpen ? <MenuX className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
             {/* Logo Badge */}
-            <div className="hidden sm:block w-12 h-12 overflow-hidden rounded-full flex-shrink-0">
-              <img
-                src="/images/me.png"
-                alt="Ayaan Faisal"
-                className="w-full h-full object-cover block"
-              />
-            </div>
+            {isHomePage && (
+              <div className="hidden sm:block w-12 h-12 overflow-hidden rounded-full flex-shrink-0">
+                <img
+                  src="/images/me.png"
+                  alt="Ayaan Faisal"
+                  className="w-full h-full object-cover block"
+                />
+              </div>
+            )}
 
             {/* Social Icons + Visitors + theme / palette */}
             <div className="ml-auto pr-0 flex flex-col items-end gap-1.5">
@@ -1323,29 +1420,41 @@ export default function Home() {
                 <nav className="flex flex-col gap-3 text-sm">
                   <Link
                     href="/"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`font-light transition-colors ${pathname === '/' ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigateMainView('home');
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`font-light cursor-pointer transition-colors ${isHomePage ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     me
                   </Link>
-                  <Link
-                    href="/experience"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`font-light transition-colors ${pathname === '/experience' ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigateMainView('experience');
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`font-light cursor-pointer text-left transition-colors ${isExperiencePage ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     experience
-                  </Link>
-                  <Link
-                    href="/projects"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`font-light transition-colors ${pathname === '/projects' ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      navigateMainView('projects');
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`font-light cursor-pointer transition-colors ${isProjectsPage ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     projects
-                  </Link>
+                  </button>
                   <Link
                     href="https://www.instagram.com/ayaan.visuals/"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="font-light text-muted-foreground hover:text-foreground transition-colors"
+                    className="font-light cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
                   >
                     @ayaan.visuals
                   </Link>
@@ -1441,7 +1550,7 @@ export default function Home() {
                         </button>
                       </div>
                       <p
-                        className={`text-[10px] leading-none text-[#b4975a] transition-all duration-300 ease-out motion-reduce:transition-none ${
+                        className={`text-[10px] leading-none text-[#b4975a] transition-all duration-300 ease-out motion-reduce:transition-none dark:text-[#d8b56b] ${
                           isDrakeTrack ? 'translate-y-0 opacity-100' : '-translate-y-1 opacity-0'
                         }`}
                         aria-hidden={!isDrakeTrack}
@@ -1457,33 +1566,34 @@ export default function Home() {
 
           {/* Hero and Content */}
           <div className="px-4 sm:px-6 lg:px-12 pb-24 sm:pb-32">
-            {/* Hero Title */}
-            <motion.div
-              className="-mx-4 -mt-2 mb-3 sm:mx-0 sm:mb-2 lg:-ml-8"
-              initial="hidden"
-              animate="visible"
-              variants={revealVariants}
-              transition={{
-                duration: prefersReducedMotion ? 0 : 0.5,
-                ease: 'easeOut',
-                delay: prefersReducedMotion ? 0 : 0.08,
-              }}
-            >
-              <HoverName />
-              <div className="mt-1 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground/65 sm:text-xs lg:hidden">
-                <img
-                  src="/images/arrow.svg"
-                  alt=""
-                  aria-hidden
-                  className="h-3.5 w-3.5 -rotate-90 opacity-70 dark:invert"
-                />
-                <span className="tracking-wide">click me</span>
-              </div>
-            </motion.div>
+            {isHomePage && (
+              <motion.div
+                className="-mx-4 -mt-2 mb-3 sm:mx-0 sm:mb-2 lg:-ml-8"
+                initial="hidden"
+                animate="visible"
+                variants={revealVariants}
+                transition={{
+                  duration: prefersReducedMotion ? 0 : 0.5,
+                  ease: 'easeOut',
+                  delay: prefersReducedMotion ? 0 : 0.08,
+                }}
+              >
+                <HoverName />
+                <div className="mt-1 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground/65 sm:text-xs lg:hidden">
+                  <img
+                    src="/images/arrow.svg"
+                    alt=""
+                    aria-hidden
+                    className="h-3.5 w-3.5 -rotate-90 opacity-70 dark:invert"
+                  />
+                  <span className="tracking-wide">click me</span>
+                </div>
+              </motion.div>
+            )}
 
             {/* Bio section */}
             <motion.div
-              className="max-w-3xl space-y-6 pl-1.5 pr-0 sm:pr-6 lg:pr-12"
+              className={`${isProjectsPage || isExperiencePage ? 'max-w-5xl' : 'max-w-3xl'} space-y-6 pl-1.5 pr-0 sm:pr-6 lg:pr-12`}
               initial="hidden"
               animate="visible"
               variants={revealVariants}
@@ -1493,226 +1603,398 @@ export default function Home() {
                 delay: prefersReducedMotion ? 0 : 0.18,
               }}
             >
-              <div className="space-y-1.5">
-                <p className="text-base lg:text-lg font-medium tracking-tight text-foreground leading-snug">
-                  <span className="font-semibold">2A Math @ </span>
-                  <span className="relative inline-block align-bottom">
-                    {(() => {
-                      const color = {
-                        bg: '#fff2a8',
-                        hoverBg: '#e0c83f',
-                      };
-                      const isHovered = hoveredTag === 'tag-uwaterloo';
-                      return (
-                        <>
-                          <a
-                            onMouseEnter={(e) => {
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              hoveredTagCenterRef.current =
-                                rect.left + rect.width / 2;
-                              setHoveredTag('tag-uwaterloo');
-                            }}
-                            onMouseLeave={() => {
-                              setHoveredTag(null);
-                              hoveredTagCenterRef.current = null;
-                            }}
-                            href={tagLinks.UWaterloo}
-                            target="_blank"
-                            rel="noreferrer"
-                            style={{
-                              backgroundColor: isHovered ? color.hoverBg : color.bg,
-                              color: isHovered ? '#ffffff' : '#000000',
-                            }}
-                            className="inline-flex items-center rounded-none px-2 py-0.5 text-[0.9em] sm:px-3 sm:py-1 sm:text-[1em] font-medium leading-tight transition-none relative z-10 touch-manipulation no-underline hover:no-underline focus:no-underline"
-                          >
-                            UWaterloo
-                          </a>
-
-                          {/* GIF Popup on Hover - Above the tag */}
-                          {hoveredTag === 'tag-uwaterloo' && (
-                            <motion.div
-                              className="absolute bottom-full left-1/2 mb-3 bg-gray-700 overflow-hidden shadow-lg z-20 pointer-events-none"
-                              style={{
-                                width: 'min(240px, 28vw)',
-                                aspectRatio: '16 / 9',
-                                border: '3px solid rgba(255, 255, 255, 1)',
-                                boxShadow: '0 0 0 1px rgba(0, 0, 0, 0.18)',
-                                animation:
-                                  'popUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                                marginLeft: parallaxMargin,
+              {isHomePage && (
+                <div className="space-y-1.5">
+                  <p className="text-base lg:text-lg font-medium tracking-tight text-foreground leading-snug">
+                    <span className="font-semibold">2A Math @ </span>
+                    <span className="relative inline-block align-bottom">
+                      {(() => {
+                        const color = {
+                          bg: '#fff2a8',
+                          hoverBg: '#e0c83f',
+                        };
+                        const isHovered = hoveredTag === 'tag-uwaterloo';
+                        return (
+                          <>
+                            <a
+                              onMouseEnter={(e) => {
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                hoveredTagCenterRef.current =
+                                  rect.left + rect.width / 2;
+                                setHoveredTag('tag-uwaterloo');
                               }}
+                              onMouseLeave={() => {
+                                setHoveredTag(null);
+                                hoveredTagCenterRef.current = null;
+                              }}
+                              href={tagLinks.UWaterloo}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{
+                                backgroundColor: isHovered ? color.hoverBg : color.bg,
+                                color: isHovered ? '#ffffff' : '#000000',
+                              }}
+                              className="inline-flex items-center gap-1 rounded-none px-2 py-0.5 text-[0.9em] sm:px-3 sm:py-1 sm:text-[1em] font-medium leading-tight transition-none relative z-10 touch-manipulation no-underline hover:no-underline focus:no-underline"
                             >
-                              <style>{`
-                                @keyframes popUp {
-                                  0% {
-                                    opacity: 0;
-                                    transform: scale(0.3) translateY(20px);
-                                  }
-                                  100% {
-                                    opacity: 1;
-                                    transform: scale(1) translateY(0);
-                                  }
-                                }
-                              `}</style>
+                              UWaterloo
                               <img
-                                src="/tag-gifs/uwaterloo.gif"
-                                alt="uwaterloo popup gif"
-                                className="w-full h-full object-cover block"
+                                src="/images/waterloo-logo.png"
+                                alt=""
+                                aria-hidden
+                                className="h-[1.08em] w-[1.08em] shrink-0 object-contain"
                               />
-                            </motion.div>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </span>
-                </p>
-                <p className="mt-0 text-base text-muted-foreground leading-snug">
-                  <em>
-                    &quot;
-                    <HandDrawnUnderline delay={0.55}>
-                      {prefersReducedMotion ? (
-                        <span
-                          className="inline-block bg-gradient-to-r from-[#b18734] via-[#d8b56b] to-[#e8cf94] bg-clip-text text-transparent"
-                          style={{ WebkitBackgroundClip: 'text' }}
-                        >
-                          you can just build things
-                        </span>
-                      ) : (
-                        <motion.span
-                          className="inline-block bg-clip-text text-transparent"
-                          style={{
+                            </a>
+
+                            {/* GIF Popup on Hover - Above the tag */}
+                            {hoveredTag === 'tag-uwaterloo' && (
+                              <motion.div
+                                className="absolute bottom-full left-1/2 mb-3 bg-gray-700 overflow-hidden shadow-lg z-20 pointer-events-none"
+                                style={{
+                                  width: 'min(240px, 28vw)',
+                                  aspectRatio: '16 / 9',
+                                  border: '3px solid rgba(255, 255, 255, 1)',
+                                  boxShadow: '0 0 0 1px rgba(0, 0, 0, 0.18)',
+                                  animation:
+                                    'popUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                  marginLeft: parallaxMargin,
+                                }}
+                              >
+                                <style>{`
+                                  @keyframes popUp {
+                                    0% {
+                                      opacity: 0;
+                                      transform: scale(0.3) translateY(20px);
+                                    }
+                                    100% {
+                                      opacity: 1;
+                                      transform: scale(1) translateY(0);
+                                    }
+                                  }
+                                `}</style>
+                                <img
+                                  src="/tag-gifs/uwaterloo.gif"
+                                  alt="uwaterloo popup gif"
+                                  className="w-full h-full object-cover block"
+                                />
+                              </motion.div>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </span>
+                  </p>
+                  <p className="mt-0 text-base text-muted-foreground leading-snug">
+                    <em>
+                      &quot;
+                      <HandDrawnUnderline delay={0.55}>
+                        {prefersReducedMotion ? (
+                          <span
+                            className="inline-block bg-gradient-to-r from-[#b18734] via-[#d8b56b] to-[#e8cf94] bg-clip-text text-transparent"
+                            style={{ WebkitBackgroundClip: 'text' }}
+                          >
+                            you can just build things
+                          </span>
+                        ) : (
+                          <motion.span
+                            className="inline-block bg-clip-text text-transparent"
+                            style={{
                             backgroundImage:
                               'linear-gradient(110deg, #b18734 0%, #d8b56b 45%, #e8cf94 60%, #b18734 100%)',
-                            backgroundSize: '220% 100%',
-                          }}
-                          animate={{ backgroundPosition: ['0% 50%', '100% 50%'] }}
-                          transition={{ duration: 3.2, repeat: Infinity, ease: 'linear' }}
-                        >
-                          you can just build things
-                        </motion.span>
-                      )}
-                    </HandDrawnUnderline>
-                    &quot;
-                  </em>
-                </p>
-              </div>
+                              backgroundSize: '220% 100%',
+                            }}
+                            animate={{ backgroundPosition: ['0% 50%', '100% 50%'] }}
+                            transition={{ duration: 3.2, repeat: Infinity, ease: 'linear' }}
+                          >
+                            you can just build things
+                          </motion.span>
+                        )}
+                      </HandDrawnUnderline>
+                      &quot;
+                    </em>
+                  </p>
+                </div>
+              )}
 
-              {/* Experience List */}
-              <motion.div
-                className="space-y-2 text-sm sm:text-base font-medium tracking-tight mb-16"
-                initial="hidden"
-                animate="visible"
-                variants={revealVariants}
-                transition={{
-                  duration: prefersReducedMotion ? 0 : 0.5,
-                  ease: 'easeOut',
-                  delay: prefersReducedMotion ? 0 : 0.4,
-                  staggerChildren: prefersReducedMotion ? 0 : 0.14,
-                }}
-              >
-                {experiences.map((exp, expIdx) => (
-                  <motion.div
-                    key={expIdx}
-                    className="flex flex-nowrap items-baseline gap-x-2"
-                    variants={revealVariants}
-                  >
-                    <span className="text-muted-foreground font-medium shrink-0 select-none">&gt;</span>
-                    <div className="min-w-0 flex-1 text-foreground leading-relaxed text-inherit [&_span]:break-words">
-                      {exp.title}
-                      {' '}
-                      {exp.items.map((item, itemIdx) => renderItem(item, itemIdx, expIdx))}
-                    </div>
-                  </motion.div>
-                ))}
-              </motion.div>
-
-              {/* Projects Section */}
-              <motion.div
-                initial="hidden"
-                animate="visible"
-                variants={revealVariants}
-                transition={{
-                  duration: prefersReducedMotion ? 0 : 0.5,
-                  ease: 'easeOut',
-                  delay: prefersReducedMotion ? 0 : 0.52,
-                }}
-              >
-                <h3 className="text-base sm:text-lg font-semibold text-foreground mb-5 sm:mb-6">
-                  projects 🚧
-                </h3>
+              {isHomePage && (
                 <motion.div
-                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                  variants={revealVariants}
+                  className="space-y-2 text-sm sm:text-base font-medium tracking-tight mb-16"
                   initial="hidden"
                   animate="visible"
+                  variants={revealVariants}
                   transition={{
                     duration: prefersReducedMotion ? 0 : 0.5,
                     ease: 'easeOut',
-                    delay: prefersReducedMotion ? 0 : 0.58,
-                    staggerChildren: prefersReducedMotion ? 0 : 0.12,
+                    delay: prefersReducedMotion ? 0 : 0.4,
+                    staggerChildren: prefersReducedMotion ? 0 : 0.14,
                   }}
                 >
-                  {projects.map((project, idx) => (
-                    (() => {
-                      const titleUnderlineDelay = idx * 0.22;
-                      return (
+                  {experiences.map((exp, expIdx) => (
                     <motion.div
-                      key={idx}
-                      className=""
+                      key={expIdx}
+                      className="flex flex-nowrap items-baseline gap-x-2"
                       variants={revealVariants}
-                      transition={{
-                        duration: prefersReducedMotion ? 0 : 0.45,
-                        ease: 'easeOut',
-                        staggerChildren: prefersReducedMotion ? 0 : 0.08,
-                      }}
                     >
-                      <a
-                        href={project.url.href}
-                        target={project.url.target}
-                        rel={project.url.rel}
-                        className="group block cursor-pointer rounded-xl px-2 py-2 transition-colors duration-150 sm:mx-0 sm:rounded-none sm:px-0 sm:py-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:bg-secondary/35 sm:active:bg-transparent"
-                      >
-                        <div className="aspect-video overflow-hidden rounded-lg border border-border/50 bg-secondary/40">
-                          {project.mediaType === 'video' ? (
-                            <video
-                              src={project.gifSrc}
-                              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                              autoPlay
-                              loop
-                              muted
-                              playsInline
-                            />
-                          ) : (
-                            <img
-                              src={project.gifSrc}
-                              alt={project.gifAlt}
-                              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                            />
-                          )}
-                        </div>
-                        <div className="space-y-0.5 pt-3 sm:pt-2">
-                          <div className="flex items-baseline justify-between gap-3 sm:gap-4">
-                            <span className="text-lg sm:text-xl font-semibold text-foreground leading-tight transition-opacity duration-150 group-hover:opacity-90 sm:group-hover:opacity-80">
-                              <FlipbookTitle text={project.title} delay={titleUnderlineDelay} />
-                            </span>
-                            <motion.span
-                              className="text-xl sm:text-2xl font-semibold text-slate-500 shrink-0 leading-none tabular-nums"
-                              variants={revealVariants}
-                            >
-                              {project.date}
-                            </motion.span>
-                          </div>
-                          <div className="text-base text-muted-foreground leading-relaxed">
-                            {project.description}
-                          </div>
-                        </div>
-                      </a>
+                      <span className="text-muted-foreground font-medium shrink-0 select-none">&gt;</span>
+                      <div className="min-w-0 flex-1 text-foreground leading-relaxed text-inherit [&_span]:break-words">
+                        {exp.title}
+                        {' '}
+                        {exp.items.map((item, itemIdx) => renderItem(item, itemIdx, expIdx))}
+                      </div>
                     </motion.div>
-                      );
-                    })()
                   ))}
                 </motion.div>
-              </motion.div>
+              )}
+
+              {isExperiencePage && (
+                <motion.div
+                  key={`experience-section-${experienceViewEpoch}`}
+                  initial="hidden"
+                  animate="visible"
+                  variants={revealVariants}
+                  transition={{
+                    duration: prefersReducedMotion ? 0 : 0.34,
+                    ease: 'easeOut',
+                    delay: 0,
+                  }}
+                >
+                  <h3 className="text-base sm:text-lg font-semibold text-foreground mb-5 sm:mb-6">
+                    experience 🧩
+                  </h3>
+                  <motion.div
+                    className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                    variants={revealVariants}
+                    initial="hidden"
+                    animate="visible"
+                    transition={{
+                      duration: prefersReducedMotion ? 0 : 0.34,
+                      ease: 'easeOut',
+                      delay: 0,
+                      staggerChildren: prefersReducedMotion ? 0 : 0.07,
+                    }}
+                  >
+                    {[
+                      {
+                        title: 'incoming @ TBD',
+                        date: 'Fall \'26',
+                        mediaType: 'gif',
+                        mediaSrc: '/tag-gifs/tbd.gif',
+                        mediaClassName: 'object-[center_72%]',
+                        mediaAlt: 'Incoming role placeholder preview',
+                        mediaHref: 'https://ayaanfaisal.com/tbd',
+                        badge: 'tbd',
+                        body: (
+                          <>
+                            you could be the one to change this.{' '}
+                            <HandDrawnUnderline delay={0.28} triggerOnView>
+                              <a href="mailto:a34faisa@uwaterloo.ca" className="underline-offset-4 hover:text-blue-300 transition-colors font-bold" rel="noopener noreferrer">
+                                contact me!
+                              </a>
+                            </HandDrawnUnderline>
+                       
+                            .
+                       
+                          </>
+                        ),
+                      },
+                      {
+                        title: 'Campus Ambassador @ Velocity',
+                        date: 'Winter \'26',
+                        mediaType: 'gif',
+                        mediaSrc: '/tag-gifs/velocity.gif',
+                        mediaAlt: 'Velocity gif',
+                        mediaHref: 'https://velocityincubator.com',
+                        badge: 'idea',
+                        body: (
+                          <>
+                            grew Velocity's campus presence by {' '}
+                            <HandDrawnUnderline delay={0.5} triggerOnView>
+                              engaging with 100+
+                            </HandDrawnUnderline>
+                            {' '}students through {' '}
+                            <HandDrawnUnderline delay={0.5} triggerOnView>
+                              5+ events.
+                            </HandDrawnUnderline>
+                          </>
+                        ),
+                      },
+                      {
+                        title: 'Software Eng @ Halo Halo',
+                        date: 'Summer \'24',
+                        mediaType: 'video',
+                        mediaSrc: '/tag-gifs/halohalo.webm',
+                        mediaAlt: 'HaloHalo',
+                        mediaHref: 'https://halohaloapp.com',
+                        badge: 'draft',
+                        body: (
+                          <>
+                            developed an online game using React.js, {''}
+                            <HandDrawnUnderline delay={0.42} triggerOnView>
+                              shipped 500+
+                            </HandDrawnUnderline>
+                            {' '}lines of production code,{' '}
+                            <HandDrawnUnderline delay={0.42} triggerOnView>
+                              completed 8+
+                            </HandDrawnUnderline>
+                            {' '}code reviews using Git and GitHub.
+                          </>
+                        ),
+                      },
+                      
+                    ].map((item, idx) => (
+                      <motion.div
+                        key={`${item.title}-${experienceViewEpoch}-${idx}`}
+                        className=""
+                        variants={revealVariants}
+                        transition={{
+                          duration: prefersReducedMotion ? 0 : 0.3,
+                          ease: 'easeOut',
+                          staggerChildren: prefersReducedMotion ? 0 : 0.04,
+                        }}
+                      >
+                        <a
+                          href={item.mediaHref}
+                          target="_blank"
+                          rel="noreferrer noopener"
+                          aria-label={`${item.title} preview link`}
+                          className="group block cursor-pointer rounded-xl px-2 py-2 transition-colors duration-150 sm:mx-0 sm:rounded-none sm:px-0 sm:py-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:bg-secondary/35 sm:active:bg-transparent"
+                        >
+                          <div className="aspect-video overflow-hidden rounded-xl bg-secondary/40 shadow-[0_8px_24px_rgba(15,23,42,0.2)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
+                            {item.mediaType === 'video' ? (
+                              <video
+                                src={item.mediaSrc}
+                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                                preload="metadata"
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                              />
+                            ) : (
+                              <img
+                                src={item.mediaSrc}
+                                alt={item.mediaAlt}
+                                loading="lazy"
+                                decoding="async"
+                                className={`h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02] ${item.mediaClassName ?? ''}`}
+                              />
+                            )}
+                          </div>
+                          <div className="space-y-0.5 pt-3 sm:pt-2">
+                            <div className="flex items-baseline justify-between gap-3 sm:gap-4">
+                              <span className="text-lg sm:text-xl font-semibold text-foreground leading-tight transition-opacity duration-150 group-hover:opacity-90 sm:group-hover:opacity-80">
+                                <FlipbookTitle text={item.title} delay={idx * 0.18} />
+                              </span>
+                              <motion.span
+                                className="text-xl sm:text-2xl font-semibold text-slate-500 shrink-0 leading-none tabular-nums"
+                                variants={revealVariants}
+                              >
+                                {item.date}
+                              </motion.span>
+                            </div>
+                            <div className="text-base text-muted-foreground leading-relaxed">
+                              {item.body}
+                            </div>
+                          </div>
+                        </a>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                </motion.div>
+              )}
+
+              {!isExperiencePage && (
+                <motion.div
+                  key={`projects-section-${projectsViewEpoch}`}
+                  initial="hidden"
+                  animate="visible"
+                  variants={revealVariants}
+                  transition={{
+                    duration: prefersReducedMotion ? 0 : 0.34,
+                    ease: 'easeOut',
+                    delay: 0,
+                  }}
+                >
+                  <h3 className="text-base sm:text-lg font-semibold text-foreground mb-5 sm:mb-6">
+                    projects 🚧
+                  </h3>
+                  <motion.div
+                    key={`projects-grid-${projectsViewEpoch}`}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                    variants={revealVariants}
+                    initial="hidden"
+                    animate="visible"
+                    transition={{
+                      duration: prefersReducedMotion ? 0 : 0.34,
+                      ease: 'easeOut',
+                      delay: 0,
+                      staggerChildren: prefersReducedMotion ? 0 : 0.07,
+                    }}
+                  >
+                    {projects.map((project, idx) => (
+                      (() => {
+                        const titleUnderlineDelay = idx * 0.22;
+                        return (
+                      <motion.div
+                        key={`${idx}-${projectsViewEpoch}`}
+                        className=""
+                        variants={revealVariants}
+                        transition={{
+                          duration: prefersReducedMotion ? 0 : 0.3,
+                          ease: 'easeOut',
+                          staggerChildren: prefersReducedMotion ? 0 : 0.04,
+                        }}
+                      >
+                        <a
+                          href={project.url.href}
+                          target={project.url.target}
+                          rel={project.url.rel}
+                          className="group block cursor-pointer rounded-xl px-2 py-2 transition-colors duration-150 sm:mx-0 sm:rounded-none sm:px-0 sm:py-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 focus-visible:ring-offset-2 focus-visible:ring-offset-background active:bg-secondary/35 sm:active:bg-transparent"
+                        >
+                          <div className="aspect-video overflow-hidden rounded-xl bg-secondary/40 shadow-[0_8px_24px_rgba(15,23,42,0.2)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
+                            {project.mediaType === 'video' ? (
+                              <video
+                                src={project.gifSrc}
+                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                                preload="metadata"
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                              />
+                            ) : (
+                              <img
+                                src={project.gifSrc}
+                                alt={project.gifAlt}
+                                loading="lazy"
+                                decoding="async"
+                                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                              />
+                            )}
+                          </div>
+                          <div className="space-y-0.5 pt-3 sm:pt-2">
+                            <div className="flex items-baseline justify-between gap-3 sm:gap-4">
+                              <span className="text-lg sm:text-xl font-semibold text-foreground leading-tight transition-opacity duration-150 group-hover:opacity-90 sm:group-hover:opacity-80">
+                                <FlipbookTitle text={project.title} delay={titleUnderlineDelay} />
+                              </span>
+                              <motion.span
+                                className="text-xl sm:text-2xl font-semibold text-slate-500 shrink-0 leading-none tabular-nums"
+                                variants={revealVariants}
+                              >
+                                {project.date}
+                              </motion.span>
+                            </div>
+                            <div className="text-base text-muted-foreground leading-relaxed">
+                              {project.description}
+                            </div>
+                          </div>
+                        </a>
+                      </motion.div>
+                        );
+                      })()
+                    ))}
+                  </motion.div>
+                </motion.div>
+              )}
 
             </motion.div>
           </div>
