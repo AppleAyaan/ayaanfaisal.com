@@ -20,4 +20,7 @@
 ## License
 
 © 2026 ayaanfaisal.com  
-All rights reserved. This project is not licensed for reuse or redistribution.
+
+
+All rights reserved. This project is not licensed for reuse or redistribution.  
+For more information, visit: [LICENSE](https://github.com/AppleAyaan/ayaanfaisal.com/blob/main/LICENSE)
