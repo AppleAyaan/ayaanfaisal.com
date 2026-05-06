@@ -80,13 +80,6 @@ const STICKER_DATA: Omit<Sticker, 'rotation'>[] = [
     alt: 'Pocket 3 sticker',
   },
   {
-    id: 7,
-    label: 'pakistan',
-    description: 'ethnicity',
-    src: '/stickers/pakistan.png',
-    alt: 'Pakistan sticker',
-  },
-  {
     id: 8,
     label: 'uae',
     description: 'where I grew up 🇦🇪',
@@ -128,9 +121,9 @@ const STICKERS: Sticker[] = STICKER_DATA.map((s, idx) => ({
   rotation: ((idx * 7) % 11) - 5,
 }));
 
-/** Visible belt order on load (left → right). UAE stays mid-strip; new ids appended after Pakistan. */
+/** Visible belt order on load (left → right). UAE stays mid-strip; new ids append at the end. */
 const PREFERRED_INITIAL_ORDER = [
-  0, 1, 2, 3, 4, 8, 5, 6, 7, 9, 10, 11, 12,
+  0, 1, 2, 3, 4, 8, 5, 6, 9, 10, 11, 12,
 ];
 
 const INITIAL_STICKER_ORDER: number[] = (() => {
