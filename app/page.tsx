@@ -367,6 +367,12 @@ export default function Home() {
       setExperienceViewEpoch((prev) => prev + 1);
     }
     setMainView(view);
+    if (
+      typeof window !== 'undefined' &&
+      window.matchMedia('(max-width: 1023px)').matches
+    ) {
+      window.scrollTo(0, 0);
+    }
   }, []);
 
   useEffect(() => {
@@ -1317,11 +1323,12 @@ export default function Home() {
         </div>
 
         {/* Right Column */}
-        <main className="flex-1">
+        <main className="relative z-30 flex min-w-0 flex-1 flex-col">
           <Fragment key={`home-entrance-${entranceReplayEpoch}`}>
+          <header className="sticky top-0 z-50 bg-background/90 backdrop-blur-md border-b border-border/35 supports-[backdrop-filter]:bg-background/80 lg:static lg:z-auto lg:bg-transparent lg:backdrop-blur-none lg:border-b-0">
           {/* Top Bar with Logo Badge and Social Icons */}
           <motion.div
-            className="px-4 sm:px-6 lg:px-12 py-5 sm:py-6 flex items-start sm:items-center w-full"
+            className="flex w-full items-start px-4 py-5 sm:px-6 sm:items-center sm:py-6 lg:px-12 min-w-0"
             initial={shouldAnimateGlobalTopBar ? 'hidden' : 'visible'}
             animate="visible"
             variants={revealVariants}
@@ -1332,7 +1339,7 @@ export default function Home() {
           >
             <button
               type="button"
-              className="lg:hidden mr-3 inline-flex h-10 w-10 items-center justify-center rounded-md border border-border/50 bg-background/85 text-foreground transition-colors hover:bg-muted"
+              className="lg:hidden mr-3 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border/50 bg-background/85 text-foreground transition-colors hover:bg-muted"
               onClick={() => setMobileMenuOpen((prev) => !prev)}
               aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
               aria-expanded={mobileMenuOpen}
@@ -1351,8 +1358,8 @@ export default function Home() {
             )}
 
             {/* Social Icons + Visitors + theme / palette */}
-            <div className="ml-auto pr-0 flex flex-col items-end gap-1.5">
-              <div className="flex flex-nowrap gap-2.5 sm:gap-4 items-center justify-end">
+            <div className="ml-auto flex min-w-0 flex-col items-end gap-1.5 pr-0">
+              <div className="flex max-w-[calc(100vw-5.5rem)] flex-nowrap items-center justify-end gap-2 sm:max-w-none sm:gap-4">
                 {socials.map((social, idx) => {
                   const Icon = social.icon;
                   return (
@@ -1415,8 +1422,8 @@ export default function Home() {
 
           {/* Mobile Nav + Music */}
           {mobileMenuOpen && (
-            <div className="lg:hidden px-4 sm:px-6 pb-5">
-              <div className="rounded-xl border border-border/50 bg-background/95 p-4 space-y-5">
+            <div className="border-b border-border/25 bg-background/95 px-4 pb-5 backdrop-blur-md supports-[backdrop-filter]:bg-background/90 lg:hidden">
+              <div className="space-y-5 rounded-xl border border-border/50 bg-background/95 p-4">
                 <nav className="flex flex-col gap-3 text-sm">
                   <Link
                     href="/"
@@ -1425,7 +1432,7 @@ export default function Home() {
                       navigateMainView('home');
                       setMobileMenuOpen(false);
                     }}
-                    className={`font-light cursor-pointer transition-colors ${isHomePage ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`block w-full text-left font-light cursor-pointer transition-colors ${isHomePage ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     me
                   </Link>
@@ -1436,7 +1443,7 @@ export default function Home() {
                       navigateMainView('experience');
                       setMobileMenuOpen(false);
                     }}
-                    className={`font-light cursor-pointer text-left transition-colors ${isExperiencePage ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`w-full text-left font-light cursor-pointer transition-colors ${isExperiencePage ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     experience
                   </button>
@@ -1447,14 +1454,14 @@ export default function Home() {
                       navigateMainView('projects');
                       setMobileMenuOpen(false);
                     }}
-                    className={`font-light cursor-pointer transition-colors ${isProjectsPage ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
+                    className={`w-full text-left font-light cursor-pointer transition-colors ${isProjectsPage ? 'text-foreground font-semibold' : 'text-muted-foreground hover:text-foreground'}`}
                   >
                     projects
                   </button>
                   <Link
                     href="https://www.instagram.com/ayaan.visuals/"
                     onClick={() => setMobileMenuOpen(false)}
-                    className="font-light cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
+                    className="block w-full text-left font-light cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
                   >
                     @ayaan.visuals
                   </Link>
@@ -1563,6 +1570,7 @@ export default function Home() {
               </div>
             </div>
           )}
+          </header>
 
           {/* Hero and Content */}
           <div className="px-4 sm:px-6 lg:px-12 pb-24 sm:pb-32">
