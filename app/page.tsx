@@ -693,7 +693,7 @@ export default function Home() {
   ];
 
   const tagLinks: Record<string, string> = {
-    'TBD': 'https://ayaanfaisal.com',
+    'TBD': 'https://ayaanfaisal.com/tbd',
     '@Halo Halo': 'https://halohaloapp.com',
     'WATSMyGPA': 'https://watsmygpa.me',
     'Velocity': 'https://www.velocityincubator.com/',
@@ -2036,12 +2036,13 @@ export default function Home() {
         <div className="w-full px-4 py-6 sm:px-6 lg:px-12 lg:py-8">
           <div className="flex w-full items-center justify-between">
             <img
-              src="/images/logo.png"
+              src="/images/logo-tab.png"
               alt="Ayaan Faisal logo"
               width={44}
               height={44}
-              className="h-10 w-10 shrink-0 overflow-hidden rounded-md object-cover shadow-sm ring-1 ring-black/10 sm:h-11 sm:w-11 lg:h-12 lg:w-12"
+              className="h-10 w-10 shrink-0 object-cover sm:h-11 sm:w-11 lg:h-12 lg:w-12"
             />
+      
             <div ref={webringContainerRef} className="shrink-0 self-center origin-center scale-70" />
           </div>
 
