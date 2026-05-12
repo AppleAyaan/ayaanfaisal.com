@@ -933,8 +933,8 @@ export default function Home() {
         <>
         a <HandDrawnUnderline delay={0.28} triggerOnView>personal gift</HandDrawnUnderline> for mother's day.{' '}
         <HandDrawnUnderline delay={0.46} triggerOnView>(1.2K+ views</HandDrawnUnderline>, {' '}
-        <HandDrawnUnderline delay={0.64} triggerOnView>350+ visits</HandDrawnUnderline>overall).
-        {' '}<HandDrawnUnderline delay={0.82} triggerOnView>happy mother's day!</HandDrawnUnderline>
+        <HandDrawnUnderline delay={0.64} triggerOnView>350+ visits</HandDrawnUnderline>{' '}overall).
+        {' '}<HandDrawnUnderline delay={0.82} triggerOnView>happy mother's day! 🌸</HandDrawnUnderline>
         </>,
       url: { href: 'http://www.happymothers-day2026.vercel.app', target: '_blank', rel: 'noreferrer' },
       gifSrc: '/tag-gifs/mothersday.gif',
